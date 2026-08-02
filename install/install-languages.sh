@@ -111,7 +111,14 @@ download() {
   curl -fsSL --retry 5 --retry-all-errors \
     -o "${download_dir}/yq-checksums" \
     "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/checksums"
-  yq_checksum="$(awk -v asset="${yq_asset}" '$2 == asset { print $1; exit }' "${download_dir}/yq-checksums")"
+  yq_checksum="$(awk -v asset="${yq_asset}" '
+    $2 {
+      name = $2
+      sub(/^\*/, "", name)
+      sub(/^\.\//, "", name)
+      if (name == asset) { print $1; exit }
+    }
+  ' "${download_dir}/yq-checksums")"
   test -n "${yq_checksum}"
   printf '%s  %s\n' "${yq_checksum}" "${yq_asset}" | (cd "${download_dir}" && sha256sum -c -)
 }
