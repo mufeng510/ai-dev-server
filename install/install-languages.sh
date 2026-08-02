@@ -119,8 +119,15 @@ download() {
       if (name == asset) { print $1; exit }
     }
   ' "${download_dir}/yq-checksums")"
-  test -n "${yq_checksum}"
-  printf '%s  %s\n' "${yq_checksum}" "${yq_asset}" | (cd "${download_dir}" && sha256sum -c -)
+  if [[ -z "${yq_checksum}" ]]; then
+    printf 'no checksum found for %s\n' "${yq_asset}" >&2
+    return 1
+  fi
+  yq_actual="$(sha256sum "${download_dir}/${yq_asset}" | awk '{ print $1 }')"
+  if [[ "${yq_actual}" != "${yq_checksum}" ]]; then
+    printf 'checksum mismatch for %s: expected=%s actual=%s\n' "${yq_asset}" "${yq_checksum}" "${yq_actual}" >&2
+    return 1
+  fi
 }
 
 install_toolchains() {
