@@ -72,16 +72,20 @@ download() {
     "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/SHASUMS256.txt"
   (cd "${download_dir}" && grep " ${bun_asset}\$" bun-SHASUMS256.txt | sha256sum -c -)
 
+  printf '%s\n' "downloading ${uv_asset}"
   download_and_verify_sidecar \
     "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/${uv_asset}" \
     "${download_dir}/${uv_asset}"
+  printf '%s\n' "downloading ${go_asset}"
   download_and_verify_sidecar \
     "https://go.dev/dl/${go_asset}" \
     "${download_dir}/${go_asset}"
+  printf '%s\n' "downloading ${rust_asset}"
   download_and_verify_sidecar \
     "https://static.rust-lang.org/rustup/dist/${rust_arch}-unknown-linux-gnu/rustup-init" \
     "${download_dir}/${rust_asset}"
 
+  printf '%s\n' "downloading ${yq_asset}"
   curl -fsSL --retry 5 --retry-all-errors \
     -o "${download_dir}/${yq_asset}" \
     "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/${yq_asset}"
