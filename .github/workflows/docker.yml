@@ -74,7 +74,8 @@ jobs:
         run: |
           set -o pipefail
           set +e
-          env \
+          build_candidate() {
+            env \
             REGISTRY=docker.io \
             IMAGE='jerry0510/ai-dev' \
             TAG="candidate-${GITHUB_SHA::12}" \
@@ -85,8 +86,15 @@ jobs:
             CREATED='${{ steps.release.outputs.date }}' \
             OPERATION_ID='${{ github.repository_id }}/${{ github.run_id }}/${{ github.run_attempt }}' \
             OUTPUT='type=image,name=${{ steps.image.outputs.image }},push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true' \
-            docker buildx bake image --metadata-file bake-metadata.json 2>&1 | tee build-candidate.log
-          status=${PIPESTATUS[0]}
+            docker buildx bake image --metadata-file bake-metadata.json
+          }
+          status=1
+          for attempt in 1 2 3; do
+            build_candidate 2>&1 | tee -a build-candidate.log
+            status=${PIPESTATUS[0]}
+            (( status == 0 )) && break
+            sleep 10
+          done
           set -e
           if (( status != 0 )); then
             message=$(tail -n 20 build-candidate.log | tr '\n' ' ')
