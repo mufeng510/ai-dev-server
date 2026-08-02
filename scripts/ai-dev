@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+command_name="${1:-}"
+[ "$#" -eq 0 ] || shift
+case "${command_name}" in
+  shell) exec ai-dev-shell "$@" ;;
+  health) exec ai-dev-health "$@" ;;
+  readiness) exec ai-dev-readiness "$@" ;;
+  doctor) exec ai-dev-doctor "$@" ;;
+  migrate) exec ai-dev-migrate "$@" ;;
+  rollback) exec ai-dev-rollback "$@" ;;
+  identity) exec ai-dev-migrate-identity "$@" ;;
+  run) exec ai-dev-run "$@" ;;
+  '') echo 'usage: ai-dev {shell|health|readiness|doctor|migrate|rollback|identity|run}' >&2; exit 64 ;;
+  *) echo "ai-dev: unknown command: ${command_name}" >&2; exit 64 ;;
+esac

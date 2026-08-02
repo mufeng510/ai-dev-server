@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [ "${AI_DEV_RESOLVED:-0}" != 1 ]; then
+  [ "$(id -u)" -ne 0 ] || exec gosu dev:dev env AI_DEV_RESOLVED=1 ai-dev-run ai-dev-doctor
+  exec env AI_DEV_RESOLVED=1 ai-dev-run ai-dev-doctor
+fi
+printf 'generation=%s\n' "${AI_DEV_GENERATION_ID}"
+for tool in claude codex omx omc cc-switch; do
+  command -v "${tool}" >/dev/null 2>&1 || { printf '%s: unavailable\n' "${tool}" >&2; exit 1; }
+  tool_version="$("${tool}" --version)" || { printf '%s: version check failed\n' "${tool}" >&2; exit 1; }
+  printf '%s\n' "${tool_version%%$'\n'*}"
+done
+config_path="$(cc-switch config path)" || { echo 'cc-switch: config path failed' >&2; exit 1; }
+case "$(readlink -f "${config_path}")/" in
+  "$(readlink -f "${CC_SWITCH_CONFIG_DIR}")/"*) ;;
+  *) echo 'cc-switch: config path is outside active generation' >&2; exit 1 ;;
+esac
+cc-switch config validate >/dev/null || { echo 'cc-switch: config invalid' >&2; exit 1; }
+cc-switch provider list >/dev/null || { echo 'cc-switch: provider inventory failed' >&2; exit 1; }
+if cc-switch auth status --json >/dev/null 2>&1; then echo 'cc-switch-auth=authenticated'; else echo 'cc-switch-auth=unauthenticated'; fi
+if claude auth status --json >/dev/null 2>&1; then echo 'claude-auth=authenticated'; else echo 'claude-auth=unauthenticated'; fi
+if codex login status >/dev/null 2>&1; then echo 'codex-auth=authenticated'; else echo 'codex-auth=unauthenticated'; fi
+omx doctor

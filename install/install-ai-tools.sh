@@ -1,0 +1,161 @@
+#!/bin/sh
+
+set -eu
+
+readonly CLAUDE_INSTALLER_URL="https://claude.ai/install.sh"
+readonly CODEX_INSTALLER_URL="https://chatgpt.com/codex/install.sh"
+readonly CC_SWITCH_REPOSITORY="SaladDay/cc-switch-cli"
+
+fail() {
+  printf 'install-ai-tools: %s\n' "$*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || fail "required command is unavailable: $1"
+}
+
+require_variable() {
+  eval "value=\${$1:-}"
+  [ -n "$value" ] || fail "required environment variable is unset: $1"
+}
+
+fetch() {
+  url="$1"
+  output="$2"
+  curl --fail --silent --show-error --location \
+    --proto '=https' --tlsv1.2 \
+    --retry 5 --retry-all-errors \
+    --output "$output" "$url"
+}
+
+verify_sha256() {
+  file="$1"
+  expected="$2"
+
+  case "$expected" in
+    ''|*[!0-9a-f]*) fail "invalid SHA-256 for $(basename "$file")" ;;
+  esac
+  [ "${#expected}" -eq 64 ] || fail "invalid SHA-256 length for $(basename "$file")"
+  printf '%s  %s\n' "$expected" "$file" | sha256sum --check --status \
+    || fail "SHA-256 verification failed for $(basename "$file")"
+}
+
+single_extracted_file() {
+  directory="$1"
+  filename="$2"
+  found="$(find "$directory" -type f -name "$filename" -print)"
+  [ -n "$found" ] || fail "archive did not contain $filename"
+  [ "$(printf '%s\n' "$found" | wc -l)" -eq 1 ] \
+    || fail "archive contained more than one $filename"
+  printf '%s\n' "$found"
+}
+
+install_claude() {
+  installer="$work_dir/claude-install.sh"
+  claude_home="$work_dir/claude-home"
+  fetch "$CLAUDE_INSTALLER_URL" "$installer"
+  verify_sha256 "$installer" "$CLAUDE_INSTALLER_SHA256"
+  mkdir -p "$claude_home"
+  HOME="$claude_home" DISABLE_UPDATES=1 bash "$installer" "$CLAUDE_CODE_VERSION"
+  installed="$(readlink -f "$claude_home/.local/bin/claude")"
+  [ -f "$installed" ] || fail "official Claude installer did not publish the expected binary"
+  install -m 0755 "$installed" "$INSTALL_PREFIX/bin/claude"
+}
+
+install_codex() {
+  installer="$work_dir/codex-install.sh"
+  codex_home="$INSTALL_PREFIX/share/codex"
+  fetch "$CODEX_INSTALLER_URL" "$installer"
+  verify_sha256 "$installer" "$CODEX_INSTALLER_SHA256"
+  mkdir -p "$codex_home"
+  CODEX_HOME="$codex_home" \
+  CODEX_INSTALL_DIR="$INSTALL_PREFIX/bin" \
+  CODEX_NON_INTERACTIVE=1 \
+  CODEX_RELEASE="$CODEX_VERSION" \
+    sh "$installer" --release "$CODEX_VERSION"
+  [ -x "$INSTALL_PREFIX/bin/codex" ] || fail "official Codex installer did not publish the expected binary"
+}
+
+install_node_tools() {
+  npm_config_audit=false \
+  npm_config_fund=false \
+  npm_config_update_notifier=false \
+    npm install --global --prefix "$INSTALL_PREFIX" --omit=dev \
+      "oh-my-claude-sisyphus@$OMC_VERSION" \
+      "oh-my-codex@$OMX_VERSION"
+
+  node -e \
+    'const [path, expected] = process.argv.slice(1); const actual = require(path).version; if (actual !== expected) { throw new Error(`expected ${expected}, installed ${actual}`); }' \
+    "$INSTALL_PREFIX/lib/node_modules/oh-my-claude-sisyphus/package.json" "$OMC_VERSION"
+  node -e \
+    'const [path, expected] = process.argv.slice(1); const actual = require(path).version; if (actual !== expected) { throw new Error(`expected ${expected}, installed ${actual}`); }' \
+    "$INSTALL_PREFIX/lib/node_modules/oh-my-codex/package.json" "$OMX_VERSION"
+}
+
+install_cc_switch() {
+  archive="$work_dir/$cc_switch_asset"
+  extract_dir="$work_dir/cc-switch-extract"
+  release_url="https://github.com/$CC_SWITCH_REPOSITORY/releases/download/v$CC_SWITCH_VERSION"
+
+  case "$cc_switch_asset" in
+    *"v$CC_SWITCH_VERSION"*linux-*musl.tar.gz) ;;
+    *) fail "cc-switch asset is not an exact version-qualified Linux musl archive" ;;
+  esac
+
+  fetch "$release_url/$cc_switch_asset" "$archive"
+  verify_sha256 "$archive" "$cc_switch_checksum"
+  mkdir -p "$extract_dir"
+  tar -xzf "$archive" -C "$extract_dir"
+  binary="$(single_extracted_file "$extract_dir" cc-switch)"
+  install -m 0755 "$binary" "$INSTALL_PREFIX/bin/cc-switch"
+}
+
+for variable in \
+  TARGETARCH \
+  CLAUDE_CODE_VERSION \
+  CLAUDE_INSTALLER_SHA256 \
+  CODEX_VERSION \
+  CODEX_INSTALLER_SHA256 \
+  OMC_VERSION \
+  OMX_VERSION \
+  CC_SWITCH_VERSION \
+  CC_SWITCH_AMD64_ASSET \
+  CC_SWITCH_AMD64_SHA256 \
+  CC_SWITCH_ARM64_ASSET \
+  CC_SWITCH_ARM64_SHA256
+do
+  require_variable "$variable"
+done
+
+for command_name in bash basename curl find install jq mktemp node npm readlink sha256sum tar wc
+do
+  require_command "$command_name"
+done
+
+INSTALL_PREFIX="${INSTALL_PREFIX:-/usr/local}"
+case "$INSTALL_PREFIX" in
+  /*) ;;
+  *) fail "INSTALL_PREFIX must be an absolute path" ;;
+esac
+
+case "$TARGETARCH" in
+  amd64)
+    cc_switch_asset="$CC_SWITCH_AMD64_ASSET"
+    cc_switch_checksum="$CC_SWITCH_AMD64_SHA256"
+    ;;
+  arm64)
+    cc_switch_asset="$CC_SWITCH_ARM64_ASSET"
+    cc_switch_checksum="$CC_SWITCH_ARM64_SHA256"
+    ;;
+  *) fail "unsupported TARGETARCH: $TARGETARCH" ;;
+esac
+
+work_dir="$(mktemp -d)"
+trap 'rm -rf "$work_dir"' 0
+mkdir -p "$INSTALL_PREFIX/bin"
+
+install_claude
+install_codex
+install_node_tools
+install_cc_switch

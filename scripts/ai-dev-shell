@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "$(id -u)" -eq "$(id -u dev)" ] || { echo 'ai-dev-shell: expected the dev user' >&2; exit 77; }
+if [ -S /var/run/docker.sock ]; then
+  socket_gid="$(stat -c %g /var/run/docker.sock)"
+  case " $(id -G) " in *" ${socket_gid} "*) ;; *) echo 'ai-dev-shell: dev lacks Docker Socket group access' >&2; exit 78 ;; esac
+fi
+exec ai-dev-run zsh -l

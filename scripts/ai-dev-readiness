@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [ "${AI_DEV_RESOLVED:-0}" != 1 ]; then
+  [ "$(id -u)" -ne 0 ] || exec gosu dev:dev env AI_DEV_RESOLVED=1 ai-dev-run ai-dev-readiness
+  exec env AI_DEV_RESOLVED=1 ai-dev-run ai-dev-readiness
+fi
+[ -S /var/run/docker.sock ] || { echo 'readiness: docker-socket-missing' >&2; exit 1; }
+docker version >/dev/null 2>&1 || { echo 'readiness: docker-socket-inaccessible' >&2; exit 1; }
+cc-switch --version >/dev/null 2>&1 || { echo 'readiness: cc-switch-unavailable' >&2; exit 1; }
+config_path="$(cc-switch config path)" || { echo 'readiness: cc-switch-config-path-failed' >&2; exit 1; }
+case "$(readlink -f "${config_path}")/" in
+  "$(readlink -f "${CC_SWITCH_CONFIG_DIR}")/"*) ;;
+  *) echo 'readiness: cc-switch-config-outside-active-generation' >&2; exit 1 ;;
+esac
+cc-switch config validate >/dev/null || { echo 'readiness: cc-switch-config-invalid' >&2; exit 1; }
+if claude auth status --json >/dev/null 2>&1; then echo 'readiness: claude-authenticated'; else echo 'readiness: claude-unauthenticated'; fi
+if codex login status >/dev/null 2>&1; then echo 'readiness: codex-authenticated'; else echo 'readiness: codex-unauthenticated'; fi
+printf '%s\n' 'readiness: ready'

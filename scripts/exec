@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ "$#" -gt 0 ] || { echo 'usage: scripts/exec COMMAND [ARG ...]' >&2; exit 64; }
+exec docker compose exec --user dev ai-dev ai-dev-run "$@"

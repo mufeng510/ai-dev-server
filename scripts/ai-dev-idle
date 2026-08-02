@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+. /usr/local/libexec/ai-dev-runtime
+operation_id="$(ai_dev_new_operation)"
+ai_dev_event "${operation_id}" workload.ready info workload-ready
+exit_code=0
+shutdown() {
+  signal="$1" exit_code="$2"
+  trap - TERM INT
+  ai_dev_event "${operation_id}" signal.received info signal-received signal "${signal}"
+  ai_dev_event "${operation_id}" shutdown.started info shutdown-started signal "${signal}"
+  jobs -pr | xargs -r kill -TERM 2>/dev/null || true
+  wait || true
+  ai_dev_event "${operation_id}" shutdown.completed info shutdown-completed signal "${signal}"
+  ai_dev_event "${operation_id}" operation.completed info operation-completed
+  exit "${exit_code}"
+}
+trap 'shutdown TERM 0' TERM
+trap 'shutdown INT 130' INT
+sleep infinity &
+child_pid="$!"
+set +e
+wait "${child_pid}"
+exit_code="$?"
+set -e
+ai_dev_event "${operation_id}" operation.failed error workload-exited state failed
+exit "${exit_code}"

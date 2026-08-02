@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+[ "$(id -u)" -ne 0 ] || { echo 'ai-dev-run: refusing to execute supported workloads as root' >&2; exit 77; }
+[ "$#" -gt 0 ] || { echo 'usage: ai-dev-run COMMAND [ARG ...]' >&2; exit 64; }
+. /usr/local/libexec/ai-dev-runtime
+ai_dev_export_generation
+exec "$@"

@@ -1,0 +1,7 @@
+# home-relative path	generation-relative target
+.config/claude-omc	omc
+.ssh	ssh
+.config/git	git
+.config/zsh	zsh
+.tmux.conf	tmux.conf
+.zshrc	zsh/.zshrc

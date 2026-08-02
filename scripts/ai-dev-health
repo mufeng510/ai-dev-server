@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+. /usr/local/libexec/ai-dev-runtime
+reason=healthy
+report() {
+  local status="$1" reason_code="$2" exit_code="$3" state_file journal operation_id target existing transition terminal
+  state_file="${AI_DEV_CONFIG_ROOT}/health-state"
+  journal="${AI_DEV_CONFIG_ROOT}/health-transition.journal"
+  exec 6>"${AI_DEV_CONFIG_ROOT}/health-transition.lock"
+  chmod 0660 "${AI_DEV_CONFIG_ROOT}/health-transition.lock"
+  ai_dev_apply_runtime_owner "${AI_DEV_CONFIG_ROOT}/health-transition.lock"
+  flock 6
+  target="${status}:${reason_code}"
+  existing=""
+  if [ -f "${state_file}" ] && [ ! -L "${state_file}" ]; then existing="$(cat "${state_file}")"; fi
+  if [ "${existing}" != "${target}" ] || [ -e "${journal}" ]; then
+    if [ -e "${journal}" ]; then
+      [ -f "${journal}" ] && [ ! -L "${journal}" ] || ai_dev_die "health transition journal is unsafe"
+      operation_id="$(jq -er --arg target "${target}" 'select(.target == $target) | .operation_id' "${journal}")" ||
+        ai_dev_die "health transition journal does not match observed state"
+    else
+      operation_id="$(ai_dev_new_operation)"
+      jq -cn --arg operation_id "${operation_id}" --arg target "${target}" \
+        '{schema_version:1,operation_id:$operation_id,target:$target}' | ai_dev_atomic_write "${journal}" 0600
+      ai_dev_apply_runtime_owner "${journal}"
+      ai_dev_event "${operation_id}" health.transition info "${reason_code}" state "${status}"
+    fi
+    transition=0
+    terminal=0
+    for record in "${AI_DEV_CONFIG_ROOT}/events/outbox/${operation_id}"/[0-9]*.json; do
+      [ -e "${record}" ] || continue
+      if jq -e '.event == "health.transition"' "${record}" >/dev/null; then transition=1; fi
+      if jq -e '.event == "operation.completed"' "${record}" >/dev/null; then terminal=1; fi
+    done
+    [ "${transition}" -eq 1 ] || ai_dev_event "${operation_id}" health.transition info "${reason_code}" state "${status}"
+    [ "${terminal}" -eq 1 ] || ai_dev_event "${operation_id}" operation.completed info operation-completed
+    printf '%s\n' "${target}" | ai_dev_atomic_write "${state_file}" 0600
+    ai_dev_apply_runtime_owner "${state_file}"
+    rm -f "${journal}"
+    ai_dev_sync_path "${AI_DEV_CONFIG_ROOT}"
+  fi
+  printf '{"status":"%s","reason_code":"%s"}\n' "${status}" "${reason_code}"
+  exit "${exit_code}"
+}
+fail() { reason="$1"; report unhealthy "${reason}" 1; }
+dev_can_write() {
+  if [ "$(id -u)" -eq 0 ]; then gosu dev:dev test -w "$1"; else [ "$(id -u)" -eq "$(id -u dev)" ] && [ -w "$1" ]; fi
+}
+[ -f "${AI_DEV_CONFIG_ROOT}/initialized" ] && [ ! -L "${AI_DEV_CONFIG_ROOT}/initialized" ] || fail initialization-incomplete
+ai_dev_resolve_generation >/dev/null 2>&1 || fail corrupt-generation
+initialized_state="$(sed -n 's/^state=//p' "${AI_DEV_CONFIG_ROOT}/initialized")"
+initialized_generation="$(sed -n 's/^generation=//p' "${AI_DEV_CONFIG_ROOT}/initialized")"
+[ "${initialized_state}" = complete ] && [ "${initialized_generation}" = "${AI_DEV_GENERATION_ID}" ] || fail initialization-incomplete
+[ -f "${AI_DEV_IDENTITY}" ] && [ ! -L "${AI_DEV_IDENTITY}" ] || fail identity-missing
+[ ! -e "${AI_DEV_CONFIG_ROOT}/migration-pending" ] || fail migration-pending
+[ ! -e "${AI_DEV_CONFIG_ROOT}/omx-migration-required" ] || fail omx-migration-required
+recorded_uid="$(sed -n 's/^PUID=//p' "${AI_DEV_IDENTITY}")"
+recorded_gid="$(sed -n 's/^PGID=//p' "${AI_DEV_IDENTITY}")"
+[ "${recorded_uid}" = "${PUID:-1000}" ] && [ "${recorded_gid}" = "${PGID:-1000}" ] || fail identity-mismatch
+for root in ${AI_DEV_ROOTS:-/workspace /config /data /logs /models /backups}; do
+  [ -d "${root}" ] || fail mount-inaccessible
+  if [ "${root}" != "${AI_DEV_CONFIG_ROOT}" ]; then dev_can_write "${root}" || fail mount-inaccessible; fi
+done
+dev_can_write "${AI_DEV_CONFIG_ROOT}/generations" || fail mount-inaccessible
+dev_can_write "${AI_DEV_CONFIG_ROOT}/events" || fail mount-inaccessible
+for executable in ai-dev-run ai-dev-idle gosu zsh; do command -v "${executable}" >/dev/null || fail executable-missing; done
+workload_pids="$(pgrep -P 1 || true)"
+[ -n "${workload_pids}" ] || fail workload-not-running
+[ "$(printf '%s\n' "${workload_pids}" | wc -l)" -eq 1 ] || fail workload-not-running
+workload_pid="${workload_pids}"
+workload_uid="$(awk '/^Uid:/ { print $2; exit }' "/proc/${workload_pid}/status" 2>/dev/null || true)"
+[ "${workload_uid}" = "$(id -u dev)" ] || fail workload-not-running
+[ -S /var/run/docker.sock ] || fail docker-socket-missing
+report healthy "${reason}" 0

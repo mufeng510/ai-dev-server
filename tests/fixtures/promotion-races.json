@@ -1,0 +1,22 @@
+{
+  "initial": {
+    "1.2": { "version": "1.2.2", "digest": "sha256:old12" },
+    "1": { "version": "1.1.9", "digest": "sha256:old1" },
+    "2026.08": { "version": "1.2.2", "digest": "sha256:oldmonth" },
+    "latest": { "version": "1.2.2", "digest": "sha256:oldlatest" }
+  },
+  "candidates": {
+    "older": { "version": "1.2.3", "digest": "sha256:older" },
+    "newer": { "version": "1.2.4", "digest": "sha256:newer" }
+  },
+  "schedules": [
+    ["older", "newer"],
+    ["newer", "older"]
+  ],
+  "expected": {
+    "1.2": { "version": "1.2.4", "digest": "sha256:newer" },
+    "1": { "version": "1.2.4", "digest": "sha256:newer" },
+    "2026.08": { "version": "1.2.4", "digest": "sha256:newer" },
+    "latest": { "version": "1.2.4", "digest": "sha256:newer" }
+  }
+}

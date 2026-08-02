@@ -1,0 +1,215 @@
+name: Docker
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: docker.io/jerry0510/ai-dev
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - run: npm test
+      - run: npm run lint
+      - run: docker compose config --quiet
+      - run: docker buildx bake --print
+
+  pr-amd64:
+    if: github.event_name == 'pull_request'
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - run: docker buildx bake test
+      - run: docker run --rm --entrypoint bash ai-dev:test -lc 'node --version && codex --version && claude --version && omc --version && omx --version && cc-switch --version'
+      - run: bash scripts/ci-lifecycle-gate.sh ai-dev:test
+
+  build-candidate:
+    if: github.event_name == 'push'
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      image: ${{ steps.image.outputs.image }}
+      ref: ${{ steps.release.outputs.ref }}
+      date: ${{ steps.release.outputs.date }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          "password": ${{ secrets.DOCKERHUB_TOKEN }}
+      - id: image
+        shell: bash
+        run: echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+      - id: release
+        shell: bash
+        run: |
+          ref=${GITHUB_REF_NAME}
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            date=$(git for-each-ref --format='%(creatordate:iso-strict)' "refs/tags/$ref")
+          else
+            date=$(git show -s --format=%cI "$GITHUB_SHA")
+          fi
+          node scripts/release-policy.mjs plan --ref "$ref" --sha "$GITHUB_SHA" --date "$date"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "date=$date" >> "$GITHUB_OUTPUT"
+      - id: build
+        shell: bash
+        run: |
+          env \
+            REGISTRY=docker.io \
+            IMAGE='jerry0510/ai-dev' \
+            TAG="candidate-${GITHUB_SHA::12}" \
+            CACHE_FROM=type=gha \
+            CACHE_TO=type=gha,mode=max \
+            SOURCE_REPOSITORY='${{ github.server_url }}/${{ github.repository }}' \
+            REVISION='${{ github.sha }}' \
+            CREATED='${{ steps.release.outputs.date }}' \
+            OPERATION_ID='${{ github.repository_id }}/${{ github.run_id }}/${{ github.run_attempt }}' \
+            OUTPUT='type=image,name=${{ steps.image.outputs.image }},push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true' \
+            docker buildx bake image --metadata-file bake-metadata.json
+          digest=$(jq -er '.["image"]."containerimage.digest"' bake-metadata.json)
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+      - run: docker buildx imagetools inspect "${IMAGE}@${{ steps.build.outputs.digest }}"
+      - run: node scripts/release-event.mjs --output release-events.jsonl --event candidate_pushed --digest '${{ steps.build.outputs.digest }}' --ref '${{ steps.release.outputs.ref }}'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-events-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-candidate
+          path: release-events.jsonl
+          retention-days: 90
+
+  qemu-smoke:
+    needs: build-candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
+      - run: docker run --rm --platform linux/amd64 --entrypoint true '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}'
+      - run: docker run --rm --platform linux/arm64 --entrypoint true '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}'
+
+  native-amd64:
+    needs: build-candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: scripts/release-native-gate.sh '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}' amd64
+
+  native-arm64:
+    needs: build-candidate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: scripts/release-native-gate.sh '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}' arm64
+
+  publish-immutable:
+    needs: [build-candidate, native-amd64, native-arm64]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          "password": ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-events-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-candidate
+          path: .release-events
+      - run: cp .release-events/release-events.jsonl release-events.jsonl
+      - shell: bash
+        run: |
+          args=()
+          if [[ '${{ needs.build-candidate.outputs.ref }}' != master ]]; then args+=(--immutable-only); fi
+          node scripts/release-reconcile.mjs --image '${{ needs.build-candidate.outputs.image }}' --digest '${{ needs.build-candidate.outputs.digest }}' --ref '${{ needs.build-candidate.outputs.ref }}' --date '${{ needs.build-candidate.outputs.date }}' --events release-events.jsonl "${args[@]}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-events-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-immutable
+          path: release-events.jsonl
+          retention-days: 90
+
+  promote-stable:
+    if: startsWith(needs.build-candidate.outputs.ref, 'v') && !contains(needs.build-candidate.outputs.ref, '-')
+    needs: [build-candidate, native-amd64, native-arm64, publish-immutable]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: dockerhub-stable
+    concurrency:
+      group: dockerhub-stable-promotion
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          "password": ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-events-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-immutable
+          path: .release-events
+      - run: cp .release-events/release-events.jsonl release-events.jsonl
+      - run: node scripts/release-reconcile.mjs --image '${{ needs.build-candidate.outputs.image }}' --digest '${{ needs.build-candidate.outputs.digest }}' --ref '${{ needs.build-candidate.outputs.ref }}' --date '${{ needs.build-candidate.outputs.date }}' --events release-events.jsonl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-events-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-promotion
+          path: release-events.jsonl
+          retention-days: 90
+
+  release-evidence:
+    if: >-
+      always() &&
+      needs.build-candidate.result == 'success' &&
+      needs.native-amd64.result == 'success' &&
+      needs.native-arm64.result == 'success' &&
+      needs.publish-immutable.result == 'success' &&
+      (needs.promote-stable.result == 'success' || needs.promote-stable.result == 'skipped')
+    needs: [build-candidate, qemu-smoke, native-amd64, native-arm64, publish-immutable, promote-stable]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          "password": ${{ secrets.DOCKERHUB_TOKEN }}
+      - run: |
+          printf '%s\n' '{"repositoryId":"${{ github.repository_id }}","runId":"${{ github.run_id }}","runAttempt":"${{ github.run_attempt }}","digest":"${{ needs.build-candidate.outputs.digest }}"}' > oci-digest-evidence.json
+      - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+        with:
+          subject-name: ${{ needs.build-candidate.outputs.image }}
+          subject-digest: ${{ needs.build-candidate.outputs.digest }}
+          push-to-registry: true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: oci-evidence-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: oci-digest-evidence.json
+          retention-days: 90

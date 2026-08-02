@@ -1,0 +1,330 @@
+#!/usr/bin/env bash
+# Shared runtime primitives. This file is sourced, never executed directly.
+
+AI_DEV_CONFIG_ROOT="${AI_DEV_CONFIG_ROOT:-/config}"
+AI_DEV_LOG_ROOT="${AI_DEV_LOG_ROOT:-/logs}"
+AI_DEV_BACKUP_ROOT="${AI_DEV_BACKUP_ROOT:-/backups}"
+AI_DEV_HOME="${AI_DEV_HOME:-/home/dev}"
+AI_DEV_RUNTIME_UID="${AI_DEV_RUNTIME_UID:-${PUID:-}}"
+AI_DEV_RUNTIME_GID="${AI_DEV_RUNTIME_GID:-${PGID:-}}"
+AI_DEV_GENERATIONS="${AI_DEV_CONFIG_ROOT}/generations"
+AI_DEV_POINTER="${AI_DEV_CONFIG_ROOT}/active-generation"
+AI_DEV_LOCK="${AI_DEV_CONFIG_ROOT}/runtime.lock"
+AI_DEV_IDENTITY="${AI_DEV_CONFIG_ROOT}/identity"
+
+ai_dev_apply_runtime_owner() {
+  [ "$(id -u)" -eq 0 ] || return 0
+  [ -n "${AI_DEV_RUNTIME_UID:-}" ] && [ -n "${AI_DEV_RUNTIME_GID:-}" ] || return 0
+  chown "${AI_DEV_RUNTIME_UID}:${AI_DEV_RUNTIME_GID}" "$@"
+}
+
+ai_dev_die() {
+  printf 'ai-dev: %s\n' "$*" >&2
+  return 1
+}
+
+ai_dev_safe_generation_id() {
+  case "$1" in
+    ''|*[!A-Za-z0-9._-]*|.*|-*) return 1 ;;
+  esac
+  [ "${#1}" -le 128 ]
+}
+
+ai_dev_resolve_generation() {
+  if [ ! -f "${AI_DEV_POINTER}" ] || [ -L "${AI_DEV_POINTER}" ]; then
+    ai_dev_die "active generation pointer is missing, not regular, or is a symlink"
+    return 1
+  fi
+  if ! AI_DEV_GENERATION_ID="$(cat "${AI_DEV_POINTER}")"; then
+    ai_dev_die "active generation pointer cannot be read"
+    return 1
+  fi
+  case "${AI_DEV_GENERATION_ID}" in
+    *$'\n'*|*$'\r'*)
+      ai_dev_die "active generation pointer contains multiple lines"
+      return 1
+      ;;
+  esac
+  if ! ai_dev_safe_generation_id "${AI_DEV_GENERATION_ID}"; then
+    ai_dev_die "active generation id is unsafe"
+    return 1
+  fi
+  AI_DEV_GENERATION="${AI_DEV_GENERATIONS}/${AI_DEV_GENERATION_ID}"
+  if [ ! -d "${AI_DEV_GENERATION}" ] || [ -L "${AI_DEV_GENERATION}" ]; then
+    ai_dev_die "selected generation does not exist as a real directory"
+    return 1
+  fi
+  local generation_root resolved_generation
+  if ! generation_root="$(readlink -f "${AI_DEV_GENERATIONS}")" ||
+    ! resolved_generation="$(readlink -f "${AI_DEV_GENERATION}")"; then
+    ai_dev_die "selected generation path cannot be resolved"
+    return 1
+  fi
+  case "${resolved_generation}/" in
+    "${generation_root}/"*) ;;
+    *)
+      ai_dev_die "selected generation escapes the generation root"
+      return 1
+      ;;
+  esac
+  export AI_DEV_GENERATION_ID AI_DEV_GENERATION
+}
+
+ai_dev_validate_generation() {
+  local generation_id="$1" generation_dir generation_root resolved_generation
+  ai_dev_safe_generation_id "${generation_id}" || return 1
+  generation_dir="${AI_DEV_GENERATIONS}/${generation_id}"
+  [ -d "${generation_dir}" ] && [ ! -L "${generation_dir}" ] || return 1
+  generation_root="$(readlink -f "${AI_DEV_GENERATIONS}")" || return 1
+  resolved_generation="$(readlink -f "${generation_dir}")" || return 1
+  case "${resolved_generation}/" in "${generation_root}/"*) ;; *) return 1 ;; esac
+  [ -f "${generation_dir}/schema-version" ] && [ ! -L "${generation_dir}/schema-version" ] || return 1
+  for required in claude codex omc cc-switch git ssh zsh; do
+    [ -d "${generation_dir}/${required}" ] && [ ! -L "${generation_dir}/${required}" ] || return 1
+  done
+}
+
+ai_dev_probe_generation_tools() {
+  local generation="$1" uid gid
+  ai_dev_validate_generation "$(basename "${generation}")" || return 1
+  uid="$(stat -c %u "${generation}/cc-switch")" || return 1
+  gid="$(stat -c %g "${generation}/cc-switch")" || return 1
+  gosu "${uid}:${gid}" env HOME="${AI_DEV_HOME}" \
+    CLAUDE_CONFIG_DIR="${generation}/claude" CODEX_HOME="${generation}/codex" \
+    OMC_STATE_DIR="${generation}/omc" CC_SWITCH_CONFIG_DIR="${generation}/cc-switch" \
+    GIT_CONFIG_GLOBAL="${generation}/git/config" ZDOTDIR="${generation}/zsh" \
+    bash -lc 'claude --version >/dev/null && codex --version >/dev/null && omc --version >/dev/null && omx --version >/dev/null && cc-switch config validate >/dev/null && git --version >/dev/null && ssh -V >/dev/null 2>&1 && zsh --version >/dev/null'
+}
+
+ai_dev_secure_state() {
+  local root="$1"
+  [ -d "${root}" ] && [ ! -L "${root}" ] || return 1
+  if find "${root}" -xdev -type l -print -quit | grep -q .; then
+    ai_dev_die "credential state contains a symlink: ${root}"
+    return 1
+  fi
+  find "${root}" -xdev -type d -exec chmod 0700 {} +
+  find "${root}" -xdev -type f -exec chmod 0600 {} +
+}
+
+ai_dev_export_generation() {
+  ai_dev_resolve_generation || return 1
+  export HOME="${AI_DEV_HOME}"
+  export USER=dev
+  export LOGNAME=dev
+  export CLAUDE_CONFIG_DIR="${AI_DEV_GENERATION}/claude"
+  export CODEX_HOME="${AI_DEV_GENERATION}/codex"
+  export OMC_STATE_DIR="${AI_DEV_GENERATION}/omc"
+  export CC_SWITCH_CONFIG_DIR="${AI_DEV_GENERATION}/cc-switch"
+  export GIT_CONFIG_GLOBAL="${AI_DEV_GENERATION}/git/config"
+  export ZDOTDIR="${AI_DEV_GENERATION}/zsh"
+}
+
+ai_dev_sync_path() {
+  sync -f "$1" 2>/dev/null || sync
+}
+
+ai_dev_atomic_write() {
+  destination="$1"
+  mode="$2"
+  directory="$(dirname "${destination}")"
+  temporary="${destination}.tmp.$$"
+  install -d "${directory}"
+  cat >"${temporary}"
+  chmod "${mode}" "${temporary}"
+  ai_dev_sync_path "${temporary}"
+  mv -f "${temporary}" "${destination}"
+  ai_dev_sync_path "${directory}"
+}
+
+ai_dev_new_operation() {
+  cat /proc/sys/kernel/random/uuid 2>/dev/null || printf '%s-%s\n' "$(date -u +%Y%m%dT%H%M%SZ)" "$$"
+}
+
+ai_dev_replay_events() {
+  local replay_lock sink operation_dir operation_id cursor_file cursor sequence record line
+  replay_lock="${AI_DEV_CONFIG_ROOT}/events/replay.lock"
+  install -d -m 0700 "${AI_DEV_CONFIG_ROOT}/events/cursors/stdout" \
+    "${AI_DEV_CONFIG_ROOT}/events/cursors/events-jsonl" "${AI_DEV_LOG_ROOT}"
+  ai_dev_apply_runtime_owner "${AI_DEV_CONFIG_ROOT}/events/cursors/stdout" \
+    "${AI_DEV_CONFIG_ROOT}/events/cursors/events-jsonl" "${AI_DEV_LOG_ROOT}"
+  exec 7>"${replay_lock}"
+  chmod 0660 "${replay_lock}"
+  ai_dev_apply_runtime_owner "${replay_lock}"
+  flock 7
+  for sink in stdout events-jsonl; do
+    for operation_dir in "${AI_DEV_CONFIG_ROOT}/events/outbox"/*; do
+      [ -e "${operation_dir}" ] || continue
+      [ -d "${operation_dir}" ] && [ ! -L "${operation_dir}" ] || {
+        flock -u 7
+        ai_dev_die "event outbox contains an unsafe operation directory"
+        return 1
+      }
+      operation_id="$(basename "${operation_dir}")"
+      cursor_file="${AI_DEV_CONFIG_ROOT}/events/cursors/${sink}/${operation_id}"
+      cursor=0
+      if [ -e "${cursor_file}" ]; then
+        [ -f "${cursor_file}" ] && [ ! -L "${cursor_file}" ] || {
+          flock -u 7
+          ai_dev_die "event cursor is unsafe"
+          return 1
+        }
+        cursor="$(cat "${cursor_file}")"
+        case "${cursor}" in ''|*[!0-9]*)
+          flock -u 7
+          ai_dev_die "event cursor is invalid"
+          return 1
+          ;;
+        esac
+      fi
+      for record in "${operation_dir}"/[0-9]*.json; do
+        [ -e "${record}" ] || continue
+        [ -f "${record}" ] && [ ! -L "${record}" ] || {
+          flock -u 7
+          ai_dev_die "event outbox contains an unsafe record"
+          return 1
+        }
+        sequence="$((10#$(basename "${record}" .json)))"
+        [ "${sequence}" -gt "${cursor}" ] || continue
+        line="$(jq -ce . "${record}")" || {
+          flock -u 7
+          ai_dev_die "event outbox contains invalid JSON"
+          return 1
+        }
+        if [ "${sink}" = stdout ]; then
+          printf '%s\n' "${line}"
+        else
+          printf '%s\n' "${line}" >>"${AI_DEV_LOG_ROOT}/events.jsonl"
+          chmod 0600 "${AI_DEV_LOG_ROOT}/events.jsonl"
+          ai_dev_apply_runtime_owner "${AI_DEV_LOG_ROOT}/events.jsonl"
+          ai_dev_sync_path "${AI_DEV_LOG_ROOT}/events.jsonl"
+        fi
+        printf '%s\n' "${sequence}" | ai_dev_atomic_write "${cursor_file}" 0600
+        ai_dev_apply_runtime_owner "${cursor_file}"
+        cursor="${sequence}"
+      done
+    done
+  done
+  flock -u 7
+}
+
+ai_dev_event() {
+  operation_id="$1" event_name="$2" severity="$3" reason_code="$4"
+  shift 4
+  case "${operation_id}${event_name}${severity}${reason_code}" in
+    *[!A-Za-z0-9._:-]*)
+      ai_dev_die "event metadata contains unsupported characters"
+      return 1
+      ;;
+  esac
+  outbox="${AI_DEV_CONFIG_ROOT}/events/outbox/${operation_id}"
+  cursors="${AI_DEV_CONFIG_ROOT}/events/cursors"
+  install -d -m 0700 "${outbox}" "${cursors}" "${AI_DEV_LOG_ROOT}"
+  ai_dev_apply_runtime_owner "${AI_DEV_CONFIG_ROOT}/events" "${AI_DEV_CONFIG_ROOT}/events/outbox" \
+    "${outbox}" "${cursors}" "${AI_DEV_LOG_ROOT}"
+  exec 8>"${outbox}/.sequence.lock"
+  flock 8
+  case "${event_name}" in
+    operation.completed|operation.failed)
+      for existing_record in "${outbox}"/[0-9]*.json; do
+        [ -e "${existing_record}" ] || continue
+        if [ ! -f "${existing_record}" ] || [ -L "${existing_record}" ]; then
+          flock -u 8
+          ai_dev_die "event outbox contains an unsafe record"
+          return 1
+        fi
+        if ! existing_event="$(jq -er '.event | select(type == "string")' "${existing_record}")"; then
+          flock -u 8
+          ai_dev_die "event outbox contains an invalid record"
+          return 1
+        fi
+        case "${existing_event}" in
+          operation.completed|operation.failed)
+            flock -u 8
+            ai_dev_die "operation already has a logical terminal record"
+            return 1
+            ;;
+        esac
+      done
+      ;;
+  esac
+  if ! last="$(find "${outbox}" -maxdepth 1 -type f -name '[0-9]*.json' -printf '%f\n' | sort | tail -n 1)"; then
+    flock -u 8
+    ai_dev_die "event outbox cannot be enumerated"
+    return 1
+  fi
+  if [ -n "${last}" ]; then sequence=$((10#${last%.json} + 1)); else sequence=1; fi
+  record="$(printf '%010d.json' "${sequence}")"
+  temporary="${outbox}/.${record}.tmp.$$"
+  context='{}'
+  while [ "$#" -ge 2 ]; do
+    key="$1" value="$2"; shift 2
+    case "${key}" in generation|state|signal|source_uid|source_gid|target_uid|target_gid|previous_generation) ;;
+      *)
+        flock -u 8
+        ai_dev_die "event context key is not allowlisted: ${key}"
+        return 1
+        ;;
+    esac
+    value="$(printf '%s' "${value}" | sed -E \
+      -e 's/sk-[A-Za-z0-9_-]{8,}/[REDACTED]/g' \
+      -e 's/gh[pousr]_[A-Za-z0-9]{8,}/[REDACTED]/g' \
+      -e 's/Bearer[[:space:]]+[A-Za-z0-9._~+\/-]+=*/[REDACTED]/g' \
+      -e 's/-----BEGIN [A-Z ]*PRIVATE KEY-----/[REDACTED]/g')"
+    context="$(jq -cn --argjson old "${context}" --arg key "${key}" --arg value "${value}" '$old + {($key): $value}')"
+  done
+  jq -cn --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    --arg event "${event_name}" --arg operation_id "${operation_id}" \
+    --argjson sequence "${sequence}" --arg severity "${severity}" \
+    --arg reason_code "${reason_code}" --argjson context "${context}" \
+    '{schema_version:1,timestamp:$timestamp,event:$event,operation_id:$operation_id,sequence:$sequence,severity:$severity,reason_code:$reason_code,context:$context}' >"${temporary}"
+  chmod 0600 "${temporary}"
+  ai_dev_apply_runtime_owner "${temporary}"
+  ai_dev_sync_path "${temporary}"
+  mv "${temporary}" "${outbox}/${record}"
+  ai_dev_sync_path "${outbox}"
+  flock -u 8
+  ai_dev_replay_events
+}
+
+ai_dev_event_once() {
+  local operation_id="$1" event_name="$2" record
+  for record in "${AI_DEV_CONFIG_ROOT}/events/outbox/${operation_id}"/[0-9]*.json; do
+    [ -e "${record}" ] || continue
+    [ -f "${record}" ] && [ ! -L "${record}" ] || return 1
+    jq -e --arg event "${event_name}" '.event == $event' "${record}" >/dev/null && return 0
+  done
+  ai_dev_event "$@"
+}
+
+ai_dev_generation_hash() {
+  local generation="$1"
+  (
+    cd "${generation}"
+    while IFS= read -r -d '' path; do
+      mode="$(stat -c %a -- "${path}")" || exit 1
+      if [ -L "${path}" ]; then
+        printf 'L\0%s\0%s\0%s\0' "${path}" "${mode}" "$(readlink -- "${path}")"
+      elif [ -d "${path}" ]; then
+        printf 'D\0%s\0%s\0' "${path}" "${mode}"
+      elif [ -f "${path}" ]; then
+        content_hash="$(sha256sum -- "${path}")" || exit 1
+        printf 'F\0%s\0%s\0%s\0' "${path}" "${mode}" "${content_hash%% *}"
+      else
+        printf 'ai-dev: unsupported generation entry type: %s\n' "${path}" >&2
+        exit 1
+      fi
+    done < <(LC_ALL=C find . -mindepth 1 -print0 | LC_ALL=C sort -z)
+  ) | sha256sum | cut -d' ' -f1
+}
+
+ai_dev_commit_pointer() {
+  generation_id="$1"
+  if ! ai_dev_safe_generation_id "${generation_id}"; then
+    ai_dev_die "refusing unsafe generation id"
+    return 1
+  fi
+  # The pointer is a root-controlled selector. Workloads may read it, never replace it.
+  printf '%s\n' "${generation_id}" | ai_dev_atomic_write "${AI_DEV_POINTER}" 0644
+  chown root:root "${AI_DEV_POINTER}"
+}

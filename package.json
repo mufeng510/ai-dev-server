@@ -1,0 +1,16 @@
+{
+  "name": "ai-dev-server-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "node scripts/validate.mjs --static-only",
+    "validate": "node scripts/validate.mjs",
+    "validate:strict": "node scripts/validate.mjs --strict-tools"
+  }
+}
+

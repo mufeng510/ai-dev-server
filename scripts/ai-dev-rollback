@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+[ "$(id -u)" -eq 0 ] || { echo 'ai-dev-rollback: must run as root with the service stopped' >&2; exit 77; }
+. /usr/local/libexec/ai-dev-runtime
+exec 9>"${AI_DEV_LOCK}"
+flock -n 9 || { echo 'ai-dev-rollback: service is running or another operation holds the lock' >&2; exit 75; }
+journal="${AI_DEV_CONFIG_ROOT}/rollback.journal"
+recovering=0
+ai_dev_resolve_generation
+current_id="${AI_DEV_GENERATION_ID}"
+if [ -e "${journal}" ]; then
+  [ -f "${journal}" ] && [ ! -L "${journal}" ] || ai_dev_die "rollback journal is unsafe"
+  operation_id="$(jq -er '.operation_id' "${journal}")"
+  source_id="$(jq -er '.source' "${journal}")"
+  target_id="$(jq -er '.target' "${journal}")"
+  ai_dev_safe_generation_id "${source_id}" && ai_dev_safe_generation_id "${target_id}" || ai_dev_die "rollback journal contains unsafe generation ids"
+  if [ "${current_id}" = "${target_id}" ]; then
+    ai_dev_validate_generation "${target_id}" || ai_dev_die "committed rollback target is unsafe"
+    ai_dev_event "${operation_id}" recovery.started warning recovery-required state configuration
+    ai_dev_event_once "${operation_id}" rollback.committed info rollback-committed generation "${target_id}" previous_generation "${source_id}"
+    ai_dev_event_once "${operation_id}" recovery.completed info recovery-completed state configuration generation "${target_id}"
+    ai_dev_event_once "${operation_id}" rollback.completed info rollback-completed generation "${target_id}"
+    ai_dev_event_once "${operation_id}" operation.completed info operation-completed
+    rm -f "${journal}"
+    ai_dev_sync_path "${AI_DEV_CONFIG_ROOT}"
+    printf 'rollback recovery complete: %s -> %s\n' "${source_id}" "${target_id}"
+    exit 0
+  fi
+  [ "${current_id}" = "${source_id}" ] || ai_dev_die "rollback journal does not match the active generation"
+  recovering=1
+  ai_dev_event "${operation_id}" recovery.started warning recovery-required state configuration
+elif [ "$#" -gt 0 ]; then
+  target_id="$1"
+else
+  previous_generation="${AI_DEV_CONFIG_ROOT}/previous-generation"
+  [ -f "${previous_generation}" ] && [ ! -L "${previous_generation}" ] ||
+    ai_dev_die "previous generation record is missing or unsafe"
+  target_id="$(cat "${previous_generation}")" || ai_dev_die "previous generation record cannot be read"
+fi
+if [ "${recovering}" -eq 0 ]; then
+  operation_id="$(ai_dev_new_operation)"
+  source_id="${current_id}"
+  ai_dev_event "${operation_id}" rollback.started info rollback-started
+fi
+ai_dev_safe_generation_id "${target_id}" || ai_dev_die "no safe rollback generation is recorded"
+target_dir="${AI_DEV_GENERATIONS}/${target_id}"
+[ -d "${target_dir}" ] && [ ! -L "${target_dir}" ] || ai_dev_die "rollback generation is unavailable"
+ai_dev_validate_generation "${target_id}" || ai_dev_die "rollback generation is incomplete or unsafe"
+backup_hash_file="${AI_DEV_BACKUP_ROOT}/generations/${target_id}.sha256"
+[ -f "${backup_hash_file}" ] && [ ! -L "${backup_hash_file}" ] || ai_dev_die "rollback generation hash record is missing or unsafe"
+read -r hash_generation expected_hash extra <"${backup_hash_file}"
+[ -z "${extra:-}" ] && [ "${hash_generation}" = "${target_id}" ] || ai_dev_die "rollback generation hash record is invalid"
+[ "$(ai_dev_generation_hash "${target_dir}")" = "${expected_hash}" ] || ai_dev_die "rollback generation hash does not match its backup record"
+target_uid="$(stat -c %u "${target_dir}/cc-switch")" target_gid="$(stat -c %g "${target_dir}/cc-switch")"
+ai_dev_probe_generation_tools "${target_dir}" || ai_dev_die "rollback generation tool probe failed"
+ai_dev_secure_state "${target_dir}/cc-switch" || ai_dev_die "rollback cc-switch permissions are unsafe"
+jq -cn --arg operation_id "${operation_id}" --arg source "${current_id}" --arg target "${target_id}" \
+  '{schema_version:1,operation_id:$operation_id,source:$source,target:$target,state:"validated"}' |
+  ai_dev_atomic_write "${AI_DEV_CONFIG_ROOT}/rollback.journal" 0600
+printf '%s\n' "${current_id}" | ai_dev_atomic_write "${AI_DEV_CONFIG_ROOT}/previous-generation" 0600
+ai_dev_commit_pointer "${target_id}"
+ai_dev_event "${operation_id}" rollback.committed info rollback-committed generation "${target_id}" previous_generation "${current_id}"
+[ "${recovering}" -eq 0 ] || ai_dev_event "${operation_id}" recovery.completed info recovery-completed state configuration generation "${target_id}"
+ai_dev_event "${operation_id}" rollback.completed info rollback-completed generation "${target_id}"
+ai_dev_event "${operation_id}" operation.completed info operation-completed
+rm -f "${journal}"
+ai_dev_sync_path "${AI_DEV_CONFIG_ROOT}"
+printf 'rollback complete: %s -> %s\n' "${current_id}" "${target_id}"

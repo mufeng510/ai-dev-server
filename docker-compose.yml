@@ -1,0 +1,52 @@
+name: ai-dev
+
+services:
+  ai-dev:
+    # Override to pin a release, use a registry mirror, or test a local image.
+    image: ${AI_DEV_IMAGE:-docker.io/jerry0510/ai-dev:latest}
+    # Start after Docker daemon restarts, except when explicitly stopped by the operator.
+    restart: unless-stopped
+    # Default directory for the idle process and interactive development sessions.
+    working_dir: /workspace
+    # Drop every Linux capability, then restore only those required for runtime ownership repair.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    environment:
+      # Recorded on first start to own persistent volumes as the host user.
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      # Controls timezone data and timestamps emitted by tools in the container.
+      TZ: ${TZ:-UTC}
+    volumes:
+      # Persistent state is intentionally separate from the immutable image.
+      - workspace:/workspace
+      - config:/config
+      - data:/data
+      - logs:/logs
+      - models:/models
+      - backups:/backups
+      # Enables Docker CLI/Compose/Buildx in the container to control the host daemon.
+      # This is equivalent to host-root access; use only on a trusted single-user host.
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    healthcheck:
+      # Verifies the entrypoint completed initialization and the development environment is ready.
+      test: ["CMD", "/usr/local/bin/ai-dev-health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+volumes:
+  # Named volumes retain user state across container recreation.
+  workspace:
+  config:
+  data:
+  logs:
+  models:
+  backups:

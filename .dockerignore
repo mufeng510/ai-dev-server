@@ -1,0 +1,15 @@
+.git
+.github
+.omx
+.env
+.env.*
+node_modules
+dist
+build
+coverage
+*.log
+*.tmp
+docs
+examples
+tests
+

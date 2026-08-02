@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+[ "$(id -u)" -eq 0 ] || { echo 'ai-dev-migrate-identity: must run as root with the service stopped' >&2; exit 77; }
+. /usr/local/libexec/ai-dev-runtime
+usage() { echo 'usage: ai-dev-migrate-identity SOURCE_UID SOURCE_GID TARGET_UID TARGET_GID' >&2; exit 64; }
+[ "$#" -eq 4 ] || usage
+source_uid="$1" source_gid="$2" target_uid="$3" target_gid="$4"
+for value in "$@"; do case "${value}" in ''|*[!0-9]*) usage ;; esac; [ "${value}" -gt 0 ] || usage; done
+conflicting_user="$(getent passwd "${target_uid}" | cut -d: -f1 || true)"
+[ -z "${conflicting_user}" ] || [ "${conflicting_user}" = dev ] ||
+  ai_dev_die "target PUID ${target_uid} is already assigned to ${conflicting_user}"
+exec 9>"${AI_DEV_LOCK}"
+flock -n 9 || { echo 'ai-dev-migrate-identity: service is running or another operation holds the lock' >&2; exit 75; }
+[ -f "${AI_DEV_IDENTITY}" ] && [ ! -L "${AI_DEV_IDENTITY}" ] || ai_dev_die "identity record is missing or unsafe"
+recorded_uid="$(sed -n 's/^PUID=//p' "${AI_DEV_IDENTITY}")"
+recorded_gid="$(sed -n 's/^PGID=//p' "${AI_DEV_IDENTITY}")"
+journal="${AI_DEV_CONFIG_ROOT}/identity-migration.journal"
+recovering=0
+if [ -e "${journal}" ]; then
+  [ -f "${journal}" ] && [ ! -L "${journal}" ] || ai_dev_die "identity migration journal is unsafe"
+  operation_id="$(jq -er '.operation_id' "${journal}")"
+  journal_source_uid="$(jq -er '.source_uid' "${journal}")"
+  journal_source_gid="$(jq -er '.source_gid' "${journal}")"
+  journal_target_uid="$(jq -er '.target_uid' "${journal}")"
+  journal_target_gid="$(jq -er '.target_gid' "${journal}")"
+  [ "${source_uid}:${source_gid}:${target_uid}:${target_gid}" = \
+    "${journal_source_uid}:${journal_source_gid}:${journal_target_uid}:${journal_target_gid}" ] ||
+    ai_dev_die "requested identities do not match the recovery journal"
+  case "${recorded_uid}:${recorded_gid}" in
+    "${source_uid}:${source_gid}"|"${target_uid}:${target_gid}") ;;
+    *) ai_dev_die "recorded identity does not match either recovery endpoint" ;;
+  esac
+  recovering=1
+  ai_dev_event "${operation_id}" recovery.started warning recovery-required state identity
+else
+  [ "${recorded_uid}" = "${source_uid}" ] && [ "${recorded_gid}" = "${source_gid}" ] || ai_dev_die "recorded source identity does not match"
+  operation_id="$(ai_dev_new_operation)"
+  ai_dev_event "${operation_id}" identity-migration.started info identity-migration-started source_uid "${source_uid}" source_gid "${source_gid}" target_uid "${target_uid}" target_gid "${target_gid}"
+  jq -cn --arg operation_id "${operation_id}" --arg source_uid "${source_uid}" --arg source_gid "${source_gid}" \
+    --arg target_uid "${target_uid}" --arg target_gid "${target_gid}" \
+    '{schema_version:1,operation_id:$operation_id,source_uid:$source_uid,source_gid:$source_gid,target_uid:$target_uid,target_gid:$target_gid,state:"changing-ownership"}' |
+    ai_dev_atomic_write "${journal}" 0600
+fi
+install -d -m 0700 "${AI_DEV_BACKUP_ROOT}/identity"
+if [ ! -e "${AI_DEV_BACKUP_ROOT}/identity/${operation_id}.identity" ]; then
+  cp -a "${AI_DEV_IDENTITY}" "${AI_DEV_BACKUP_ROOT}/identity/${operation_id}.identity"
+fi
+roots="${AI_DEV_ROOTS:-/workspace /config /data /logs /models /backups}"
+for root in ${roots}; do
+  [ -d "${root}" ] || ai_dev_die "declared volume root is missing: ${root}"
+  chown -R "${target_uid}:${target_gid}" "${root}"
+done
+for root in ${roots}; do
+  [ "$(stat -c %u "${root}")" = "${target_uid}" ] && [ "$(stat -c %g "${root}")" = "${target_gid}" ] || ai_dev_die "ownership verification failed"
+done
+# Restore the root-owned control plane after moving runtime-owned state.
+chown root:dev "${AI_DEV_CONFIG_ROOT}"
+chmod 0750 "${AI_DEV_CONFIG_ROOT}"
+for control in "${AI_DEV_POINTER}" "${AI_DEV_IDENTITY}" "${AI_DEV_LOCK}"; do
+  [ ! -e "${control}" ] || chown root:root "${control}"
+done
+export AI_DEV_RUNTIME_UID="${target_uid}"
+export AI_DEV_RUNTIME_GID="${target_gid}"
+printf 'PUID=%s\nPGID=%s\n' "${target_uid}" "${target_gid}" | ai_dev_atomic_write "${AI_DEV_IDENTITY}" 0600
+chown root:root "${AI_DEV_IDENTITY}"
+ai_dev_event_once "${operation_id}" identity-migration.committed info identity-migration-committed source_uid "${source_uid}" source_gid "${source_gid}" target_uid "${target_uid}" target_gid "${target_gid}"
+[ "${recovering}" -eq 0 ] || ai_dev_event_once "${operation_id}" recovery.completed info recovery-completed state identity target_uid "${target_uid}" target_gid "${target_gid}"
+ai_dev_event_once "${operation_id}" identity-migration.completed info identity-migration-completed target_uid "${target_uid}" target_gid "${target_gid}"
+ai_dev_event_once "${operation_id}" operation.completed info operation-completed
+rm -f "${journal}"
+ai_dev_sync_path "${AI_DEV_CONFIG_ROOT}"
+printf 'identity migration complete: %s:%s -> %s:%s\n' "${source_uid}" "${source_gid}" "${target_uid}" "${target_gid}"

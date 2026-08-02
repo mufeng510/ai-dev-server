@@ -1,0 +1,23 @@
+[
+  {
+    "name": "master publishes only candidate tags",
+    "ref": "master",
+    "date": "2026-07-31T23:59:59Z",
+    "shortSha": "abc1234def56",
+    "tags": ["edge", "sha-abc1234def56"]
+  },
+  {
+    "name": "stable publishes immutable and moving tags",
+    "ref": "v1.2.3",
+    "date": "2026-08-01T00:00:00Z",
+    "shortSha": "def5678abc90",
+    "tags": ["v1.2.3", "1.2.3", "1.2", "1", "2026.08", "latest"]
+  },
+  {
+    "name": "prerelease publishes only its immutable pair",
+    "ref": "v1.2.4-rc.1",
+    "date": "2026-08-01T00:00:00Z",
+    "shortSha": "987fedc65432",
+    "tags": ["v1.2.4-rc.1", "1.2.4-rc.1"]
+  }
+]
