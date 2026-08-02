@@ -45,7 +45,6 @@ jobs:
       contents: read
     outputs:
       digest: ${{ steps.build.outputs.digest }}
-      image: ${{ steps.image.outputs.image }}
       ref: ${{ steps.release.outputs.ref }}
       date: ${{ steps.release.outputs.date }}
     steps:
@@ -102,8 +101,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
-      - run: docker run --rm --platform linux/amd64 --entrypoint true '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}'
-      - run: docker run --rm --platform linux/arm64 --entrypoint true '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}'
+      - run: docker run --rm --platform linux/amd64 --entrypoint true '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}'
+      - run: docker run --rm --platform linux/arm64 --entrypoint true '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}'
 
   native-amd64:
     needs: build-candidate
@@ -111,7 +110,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - run: scripts/release-native-gate.sh '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}' amd64
+      - run: scripts/release-native-gate.sh '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}' amd64
 
   native-arm64:
     needs: build-candidate
@@ -119,7 +118,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - run: scripts/release-native-gate.sh '${{ needs.build-candidate.outputs.image }}@${{ needs.build-candidate.outputs.digest }}' arm64
+      - run: scripts/release-native-gate.sh '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}' arm64
 
   publish-immutable:
     needs: [build-candidate, native-amd64, native-arm64]
@@ -143,7 +142,7 @@ jobs:
         run: |
           args=()
           if [[ '${{ needs.build-candidate.outputs.ref }}' != master ]]; then args+=(--immutable-only); fi
-          node scripts/release-reconcile.mjs --image '${{ needs.build-candidate.outputs.image }}' --digest '${{ needs.build-candidate.outputs.digest }}' --ref '${{ needs.build-candidate.outputs.ref }}' --date '${{ needs.build-candidate.outputs.date }}' --events release-events.jsonl "${args[@]}"
+          node scripts/release-reconcile.mjs --image '${{ env.IMAGE }}' --digest '${{ needs.build-candidate.outputs.digest }}' --ref '${{ needs.build-candidate.outputs.ref }}' --date '${{ needs.build-candidate.outputs.date }}' --events release-events.jsonl "${args[@]}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -174,7 +173,7 @@ jobs:
           name: release-events-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}-immutable
           path: .release-events
       - run: cp .release-events/release-events.jsonl release-events.jsonl
-      - run: node scripts/release-reconcile.mjs --image '${{ needs.build-candidate.outputs.image }}' --digest '${{ needs.build-candidate.outputs.digest }}' --ref '${{ needs.build-candidate.outputs.ref }}' --date '${{ needs.build-candidate.outputs.date }}' --events release-events.jsonl
+      - run: node scripts/release-reconcile.mjs --image '${{ env.IMAGE }}' --digest '${{ needs.build-candidate.outputs.digest }}' --ref '${{ needs.build-candidate.outputs.ref }}' --date '${{ needs.build-candidate.outputs.date }}' --events release-events.jsonl
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -205,7 +204,7 @@ jobs:
           printf '%s\n' '{"repositoryId":"${{ github.repository_id }}","runId":"${{ github.run_id }}","runAttempt":"${{ github.run_attempt }}","digest":"${{ needs.build-candidate.outputs.digest }}"}' > oci-digest-evidence.json
       - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
-          subject-name: ${{ needs.build-candidate.outputs.image }}
+          subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ needs.build-candidate.outputs.digest }}
           push-to-registry: true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
