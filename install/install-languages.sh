@@ -12,6 +12,8 @@ download_dir="${DOWNLOAD_DIR:-/opt/downloads}"
 : "${GO_VERSION:?GO_VERSION is required}"
 : "${RUST_VERSION:?RUST_VERSION is required}"
 : "${YQ_VERSION:?YQ_VERSION is required}"
+: "${YQ_AMD64_SHA256:?YQ_AMD64_SHA256 is required}"
+: "${YQ_ARM64_SHA256:?YQ_ARM64_SHA256 is required}"
 
 case "${TARGETARCH}" in
   amd64)
@@ -20,6 +22,7 @@ case "${TARGETARCH}" in
     uv_arch="x86_64"
     rust_arch="x86_64"
     yq_arch="amd64"
+    yq_checksum="${YQ_AMD64_SHA256}"
     ;;
   arm64)
     node_arch="arm64"
@@ -27,6 +30,7 @@ case "${TARGETARCH}" in
     uv_arch="aarch64"
     rust_arch="aarch64"
     yq_arch="arm64"
+    yq_checksum="${YQ_ARM64_SHA256}"
     ;;
   *)
     echo "unsupported TARGETARCH: ${TARGETARCH}" >&2
@@ -105,24 +109,8 @@ download() {
     "${download_dir}/${rust_asset}"
 
   printf '%s\n' "downloading ${yq_asset}"
-  curl -fsSL --retry 5 --retry-all-errors \
-    -o "${download_dir}/${yq_asset}" \
+  curl -fsSL --retry 5 --retry-all-errors -o "${download_dir}/${yq_asset}" \
     "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/${yq_asset}"
-  curl -fsSL --retry 5 --retry-all-errors \
-    -o "${download_dir}/yq-checksums" \
-    "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/checksums"
-  yq_checksum="$(awk -v asset="${yq_asset}" '
-    $2 {
-      name = $2
-      sub(/^\*/, "", name)
-      sub(/^\.\//, "", name)
-      if (name == asset) { print $1; exit }
-    }
-  ' "${download_dir}/yq-checksums")"
-  if [[ -z "${yq_checksum}" ]]; then
-    printf 'no checksum found for %s\n' "${yq_asset}" >&2
-    return 1
-  fi
   yq_actual="$(sha256sum "${download_dir}/${yq_asset}" | awk '{ print $1 }')"
   if [[ "${yq_actual}" != "${yq_checksum}" ]]; then
     printf 'checksum mismatch for %s: expected=%s actual=%s\n' "${yq_asset}" "${yq_checksum}" "${yq_actual}" >&2

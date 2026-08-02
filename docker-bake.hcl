@@ -55,6 +55,8 @@ variable "OMC_VERSION" { default = "4.2.8" }
 variable "OMX_VERSION" { default = "0.20.3" }
 variable "CC_SWITCH_VERSION" { default = "5.9.3" }
 variable "YQ_VERSION" { default = "4.47.1" }
+variable "YQ_AMD64_SHA256" { default = "0fb28c6680193c41b364193d0c0fc4a03177aecde51cfc04d506b1517158c2fb" }
+variable "YQ_ARM64_SHA256" { default = "b7f7c991abe262b0c6f96bbcb362f8b35429cefd59c8b4c2daa4811f1e9df599" }
 variable "CC_SWITCH_AMD64_ASSET" { default = "cc-switch-cli-v5.9.3-linux-x64-musl.tar.gz" }
 variable "CC_SWITCH_AMD64_SHA256" { default = "a581ec26efda795182949243665ea725d42029c58bb4b9137d0708b255a4fb91" }
 variable "CC_SWITCH_ARM64_ASSET" { default = "cc-switch-cli-v5.9.3-linux-arm64-musl.tar.gz" }
@@ -90,6 +92,8 @@ target "common" {
     OMX_VERSION               = OMX_VERSION
     CC_SWITCH_VERSION         = CC_SWITCH_VERSION
     YQ_VERSION                = YQ_VERSION
+    YQ_AMD64_SHA256           = YQ_AMD64_SHA256
+    YQ_ARM64_SHA256           = YQ_ARM64_SHA256
     CC_SWITCH_AMD64_ASSET     = CC_SWITCH_AMD64_ASSET
     CC_SWITCH_AMD64_SHA256    = CC_SWITCH_AMD64_SHA256
     CC_SWITCH_ARM64_ASSET     = CC_SWITCH_ARM64_ASSET
