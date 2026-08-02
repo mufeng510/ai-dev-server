@@ -73,6 +73,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          set +e
           env \
             REGISTRY=docker.io \
             IMAGE='jerry0510/ai-dev' \
@@ -86,6 +87,7 @@ jobs:
             OUTPUT='type=image,name=${{ steps.image.outputs.image }},push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true' \
             docker buildx bake image --metadata-file bake-metadata.json 2>&1 | tee build-candidate.log
           status=${PIPESTATUS[0]}
+          set -e
           if (( status != 0 )); then
             message=$(tail -n 20 build-candidate.log | tr '\n' ' ')
             echo "::error title=Candidate image build failed::${message}"
