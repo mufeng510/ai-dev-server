@@ -53,6 +53,25 @@ download_and_verify_sidecar() {
   test "${actual}" = "${expected}"
 }
 
+download_and_verify_go() {
+  local url="$1"
+  local destination="$2"
+  local asset
+  local expected
+  local actual
+
+  asset="$(basename "${destination}")"
+  curl -fsSL --retry 5 --retry-all-errors -o "${destination}" "${url}"
+  expected="$(curl -fsSL --retry 5 --retry-all-errors 'https://go.dev/dl/?mode=json&include=all' \
+    | awk -F '"' -v asset="${asset}" '
+      $0 ~ "\\\"filename\\\": \\\"" asset "\\\"" { found = 1; next }
+      found && $0 ~ /"sha256"/ { print $4; exit }
+    ')"
+  test -n "${expected}"
+  actual="$(sha256sum "${destination}" | awk '{ print $1 }')"
+  test "${actual}" = "${expected}"
+}
+
 download() {
   install -d -m 0755 "${download_dir}"
 
@@ -77,7 +96,7 @@ download() {
     "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/${uv_asset}" \
     "${download_dir}/${uv_asset}"
   printf '%s\n' "downloading ${go_asset}"
-  download_and_verify_sidecar \
+  download_and_verify_go \
     "https://go.dev/dl/${go_asset}" \
     "${download_dir}/${go_asset}"
   printf '%s\n' "downloading ${rust_asset}"
