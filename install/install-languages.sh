@@ -65,7 +65,7 @@ download_and_verify_go() {
   expected="$(curl -fsSL --retry 5 --retry-all-errors 'https://go.dev/dl/?mode=json&include=all' \
     | awk -F '"' -v asset="${asset}" '
       $0 ~ "\\\"filename\\\": \\\"" asset "\\\"" { found = 1; next }
-      found && $0 ~ /"sha256"/ { print $4; exit }
+      found && $0 ~ /"sha256"/ && !printed { print $4; printed = 1 }
     ')"
   test -n "${expected}"
   actual="$(sha256sum "${destination}" | awk '{ print $1 }')"
