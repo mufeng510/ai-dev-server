@@ -85,7 +85,7 @@ jobs:
             REVISION='${{ github.sha }}' \
             CREATED='${{ steps.release.outputs.date }}' \
             OPERATION_ID='${{ github.repository_id }}/${{ github.run_id }}/${{ github.run_attempt }}' \
-            OUTPUT='type=image,name=${{ steps.image.outputs.image }},push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true' \
+            OUTPUT='type=image,name=${{ steps.image.outputs.image }},name-canonical=true,push=true,oci-mediatypes=true' \
             docker buildx bake image --metadata-file bake-metadata.json
           }
           status=1
