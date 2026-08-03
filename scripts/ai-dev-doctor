@@ -10,7 +10,8 @@ for tool in claude codex omx omc cc-switch; do
   tool_version="$("${tool}" --version)" || { printf '%s: version check failed\n' "${tool}" >&2; exit 1; }
   printf '%s\n' "${tool_version%%$'\n'*}"
 done
-config_path="$(cc-switch config path)" || { echo 'cc-switch: config path failed' >&2; exit 1; }
+config_path="$(cc-switch config path | sed -n 's/^Config dir:[[:space:]]*//p')" || { echo 'cc-switch: config path failed' >&2; exit 1; }
+[ -n "${config_path}" ] && [[ "${config_path}" != *$'\n'* ]] || { echo 'cc-switch: config path is unparseable' >&2; exit 1; }
 case "$(readlink -f "${config_path}")/" in
   "$(readlink -f "${CC_SWITCH_CONFIG_DIR}")/"*) ;;
   *) echo 'cc-switch: config path is outside active generation' >&2; exit 1 ;;

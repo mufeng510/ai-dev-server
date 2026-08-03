@@ -234,7 +234,8 @@ find "${AI_DEV_GENERATION}/ssh" -mindepth 1 -maxdepth 1 -type f -print -quit | g
 for tool in claude codex omx omc cc-switch; do
   command -v "${tool}" >/dev/null 2>&1 || fail "required tool is unavailable: ${tool}"
 done
-cc_switch_path="$(gosu dev:dev ai-dev-run cc-switch config path)" || fail 'cc-switch configuration path cannot be resolved'
+cc_switch_path="$(gosu dev:dev ai-dev-run cc-switch config path | sed -n 's/^Config dir:[[:space:]]*//p')" || fail 'cc-switch configuration path cannot be resolved'
+[ -n "${cc_switch_path}" ] && [[ "${cc_switch_path}" != *$'\n'* ]] || fail 'cc-switch configuration path cannot be parsed'
 case "$(readlink -f "${cc_switch_path}")/" in
   "${AI_DEV_GENERATION}/cc-switch/"*) ;;
   *) fail 'cc-switch configuration path escapes the active generation' ;;

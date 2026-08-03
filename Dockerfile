@@ -10,9 +10,13 @@ ARG GO_VERSION
 ARG RUST_VERSION
 ARG JDK_VERSION
 ARG CLAUDE_CODE_VERSION
-ARG CLAUDE_INSTALLER_SHA256
+ARG CLAUDE_AMD64_SHA256
+ARG CLAUDE_ARM64_SHA256
 ARG CODEX_VERSION
 ARG CODEX_INSTALLER_SHA256
+ARG GH_VERSION
+ARG GH_AMD64_SHA256
+ARG GH_ARM64_SHA256
 ARG OMC_VERSION
 ARG OMX_VERSION
 ARG CC_SWITCH_VERSION
@@ -36,6 +40,9 @@ ARG RUST_VERSION
 ARG YQ_VERSION
 ARG YQ_AMD64_SHA256
 ARG YQ_ARM64_SHA256
+ARG GH_VERSION
+ARG GH_AMD64_SHA256
+ARG GH_ARM64_SHA256
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
@@ -53,6 +60,14 @@ RUN TARGETARCH="${TARGETARCH}" \
     YQ_AMD64_SHA256="${YQ_AMD64_SHA256}" \
     YQ_ARM64_SHA256="${YQ_ARM64_SHA256}" \
     bash /usr/local/libexec/install-languages.sh download
+RUN case "${TARGETARCH}" in \
+      amd64) gh_asset="gh_${GH_VERSION}_linux_amd64.deb"; gh_sha="${GH_AMD64_SHA256}" ;; \
+      arm64) gh_asset="gh_${GH_VERSION}_linux_arm64.deb"; gh_sha="${GH_ARM64_SHA256}" ;; \
+      *) exit 1 ;; \
+    esac && \
+    curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+      --output "/opt/downloads/${gh_asset}" "https://github.com/cli/cli/releases/download/v${GH_VERSION}/${gh_asset}" && \
+    printf '%s  %s\n' "${gh_sha}" "/opt/downloads/${gh_asset}" | sha256sum --check --status
 
 FROM ubuntu:${UBUNTU_VERSION}@${UBUNTU_DIGEST} AS general
 
@@ -67,13 +82,16 @@ ARG GO_VERSION
 ARG RUST_VERSION
 ARG JDK_VERSION
 ARG CLAUDE_CODE_VERSION
-ARG CLAUDE_INSTALLER_SHA256
+ARG CLAUDE_AMD64_SHA256
+ARG CLAUDE_ARM64_SHA256
 ARG CODEX_VERSION
 ARG CODEX_INSTALLER_SHA256
 ARG OMC_VERSION
 ARG OMX_VERSION
 ARG CC_SWITCH_VERSION
 ARG YQ_VERSION
+ARG YQ_AMD64_SHA256
+ARG YQ_ARM64_SHA256
 
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
@@ -102,6 +120,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     bash /usr/local/libexec/ai-dev-install/install-base.sh
 
 COPY --from=downloads /opt/downloads/ /opt/downloads/
+RUN dpkg --install /opt/downloads/gh_*.deb && gh --version | grep -F "${GH_VERSION}" >/dev/null
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
     --mount=type=cache,target=/root/.cache/uv,sharing=locked \
@@ -117,6 +136,8 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     GO_VERSION="${GO_VERSION}" \
     RUST_VERSION="${RUST_VERSION}" \
     YQ_VERSION="${YQ_VERSION}" \
+    YQ_AMD64_SHA256="${YQ_AMD64_SHA256}" \
+    YQ_ARM64_SHA256="${YQ_ARM64_SHA256}" \
     bash /usr/local/libexec/ai-dev-install/install-languages.sh install
 
 WORKDIR /workspace
@@ -126,7 +147,8 @@ FROM general AS runtime
 
 ARG TARGETARCH
 ARG CLAUDE_CODE_VERSION
-ARG CLAUDE_INSTALLER_SHA256
+ARG CLAUDE_AMD64_SHA256
+ARG CLAUDE_ARM64_SHA256
 ARG CODEX_VERSION
 ARG CODEX_INSTALLER_SHA256
 ARG OMC_VERSION
@@ -143,7 +165,8 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     --mount=type=cache,target=/opt/cargo/git,sharing=locked \
     TARGETARCH="${TARGETARCH}" \
     CLAUDE_CODE_VERSION="${CLAUDE_CODE_VERSION}" \
-    CLAUDE_INSTALLER_SHA256="${CLAUDE_INSTALLER_SHA256}" \
+    CLAUDE_AMD64_SHA256="${CLAUDE_AMD64_SHA256}" \
+    CLAUDE_ARM64_SHA256="${CLAUDE_ARM64_SHA256}" \
     CODEX_VERSION="${CODEX_VERSION}" \
     CODEX_INSTALLER_SHA256="${CODEX_INSTALLER_SHA256}" \
     OMC_VERSION="${OMC_VERSION}" \

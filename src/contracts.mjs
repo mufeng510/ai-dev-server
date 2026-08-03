@@ -11,9 +11,13 @@ export const REQUIRED_VERSION_KEYS = Object.freeze([
   "RUST_VERSION",
   "JDK_VERSION",
   "CLAUDE_CODE_VERSION",
-  "CLAUDE_INSTALLER_SHA256",
+  "CLAUDE_AMD64_SHA256",
+  "CLAUDE_ARM64_SHA256",
   "CODEX_VERSION",
   "CODEX_INSTALLER_SHA256",
+  "GH_VERSION",
+  "GH_AMD64_SHA256",
+  "GH_ARM64_SHA256",
   "OMC_VERSION",
   "OMX_VERSION",
   "CC_SWITCH_VERSION",
@@ -59,7 +63,7 @@ export function validateVersionManifest(values) {
     if (!asset.includes("musl")) errors.push(`CC_SWITCH_${architecture}_ASSET must select musl`);
     if (!/^[a-f0-9]{64}$/.test(checksum)) errors.push(`CC_SWITCH_${architecture}_SHA256 must be sha256`);
   }
-  for (const key of ["CLAUDE_INSTALLER_SHA256", "CODEX_INSTALLER_SHA256"]) {
+  for (const key of ["CLAUDE_AMD64_SHA256", "CLAUDE_ARM64_SHA256", "CODEX_INSTALLER_SHA256", "GH_AMD64_SHA256", "GH_ARM64_SHA256"]) {
     if (!/^[a-f0-9]{64}$/.test(values[key] ?? "")) errors.push(`${key} must be sha256`);
   }
   return errors;

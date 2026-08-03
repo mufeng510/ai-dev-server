@@ -48,7 +48,8 @@ docker exec --user dev "${name}" ai-dev-run bash -lc '
   test "$HOME" = /home/dev && test "$USER" = dev && test "$LOGNAME" = dev
   test -r /config/active-generation
   test -w /data/cache/npm
-  case "$(cc-switch config path)" in /config/generations/*/cc-switch*) ;; *) exit 1 ;; esac
+  config_path="$(cc-switch config path | sed -n "s/^Config dir:[[:space:]]*//p")"
+  case "$config_path" in /config/generations/*/cc-switch) ;; *) exit 1 ;; esac
   printf persisted > /workspace/lifecycle-marker
 '
 docker restart "${name}" >/dev/null

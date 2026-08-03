@@ -2,7 +2,7 @@
 
 set -eu
 
-readonly CLAUDE_INSTALLER_URL="https://claude.ai/install.sh"
+readonly CLAUDE_RELEASE_BASE_URL="https://downloads.claude.ai/claude-code-releases"
 readonly CODEX_INSTALLER_URL="https://chatgpt.com/codex/install.sh"
 readonly CC_SWITCH_REPOSITORY="SaladDay/cc-switch-cli"
 
@@ -52,15 +52,16 @@ single_extracted_file() {
 }
 
 install_claude() {
-  installer="$work_dir/claude-install.sh"
-  claude_home="$work_dir/claude-home"
-  fetch "$CLAUDE_INSTALLER_URL" "$installer"
-  verify_sha256 "$installer" "$CLAUDE_INSTALLER_SHA256"
-  mkdir -p "$claude_home"
-  HOME="$claude_home" DISABLE_UPDATES=1 bash "$installer" "$CLAUDE_CODE_VERSION"
-  installed="$(readlink -f "$claude_home/.local/bin/claude")"
-  [ -f "$installed" ] || fail "official Claude installer did not publish the expected binary"
-  install -m 0755 "$installed" "$INSTALL_PREFIX/bin/claude"
+  case "$TARGETARCH" in
+    amd64) claude_platform=linux-x64; claude_checksum=$CLAUDE_AMD64_SHA256 ;;
+    arm64) claude_platform=linux-arm64; claude_checksum=$CLAUDE_ARM64_SHA256 ;;
+    *) fail "unsupported TARGETARCH for Claude Code: $TARGETARCH" ;;
+  esac
+  binary="$work_dir/claude"
+  fetch "$CLAUDE_RELEASE_BASE_URL/$CLAUDE_CODE_VERSION/$claude_platform/claude" "$binary"
+  verify_sha256 "$binary" "$claude_checksum"
+  install -m 0755 "$binary" "$INSTALL_PREFIX/bin/claude"
+  "$INSTALL_PREFIX/bin/claude" --version | grep -F "$CLAUDE_CODE_VERSION" >/dev/null || fail "Claude Code version verification failed"
 }
 
 install_codex() {
@@ -114,7 +115,8 @@ install_cc_switch() {
 for variable in \
   TARGETARCH \
   CLAUDE_CODE_VERSION \
-  CLAUDE_INSTALLER_SHA256 \
+  CLAUDE_AMD64_SHA256 \
+  CLAUDE_ARM64_SHA256 \
   CODEX_VERSION \
   CODEX_INSTALLER_SHA256 \
   OMC_VERSION \

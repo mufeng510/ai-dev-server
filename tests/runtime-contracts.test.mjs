@@ -179,9 +179,11 @@ test("normal startup never recursively changes ownership and OMX setup is determ
 
 test("official native installers remain pinned and noninteractive", () => {
   const installer = read("install/install-ai-tools.sh");
-  assert.match(installer, /https:\/\/claude\.ai\/install\.sh/);
-  assert.match(installer, /verify_sha256 "\$installer" "\$CLAUDE_INSTALLER_SHA256"/);
-  assert.match(installer, /DISABLE_UPDATES=1 bash "\$installer" "\$CLAUDE_CODE_VERSION"/);
+  assert.match(installer, /https:\/\/downloads\.claude\.ai\/claude-code-releases/);
+  assert.match(installer, /CLAUDE_RELEASE_BASE_URL/);
+  assert.match(installer, /CLAUDE_AMD64_SHA256/);
+  assert.match(installer, /CLAUDE_ARM64_SHA256/);
+  assert.match(installer, /Claude Code version verification failed/);
   assert.match(installer, /https:\/\/chatgpt\.com\/codex\/install\.sh/);
   assert.match(installer, /verify_sha256 "\$installer" "\$CODEX_INSTALLER_SHA256"/);
   assert.match(installer, /CODEX_NON_INTERACTIVE=1/);
@@ -193,6 +195,7 @@ test("official native installers remain pinned and noninteractive", () => {
 test("readiness and doctor validate active cc-switch state and report auth only", () => {
   const probes = combined("entrypoint.sh", "scripts/ai-dev-readiness", "scripts/ai-dev-doctor");
   assert.match(probes, /cc-switch config path/);
+  assert.match(probes, /Config dir:\[\[:space:\]\]\*/);
   assert.match(probes, /cc-switch config validate/);
   assert.match(probes, /claude auth status --json/);
   assert.match(probes, /codex login status/);

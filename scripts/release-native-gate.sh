@@ -48,7 +48,8 @@ docker run --rm --entrypoint bash "$image_ref" -lc '
   export HOME="$temp/home" CC_SWITCH_CONFIG_DIR="$temp/cc-switch"
   mkdir -p "$HOME" "$CC_SWITCH_CONFIG_DIR" "$temp/codex-home"
   chmod 700 "$CC_SWITCH_CONFIG_DIR"
-  config_path=$(cc-switch config path)
+  config_path=$(cc-switch config path | sed -n "s/^Config dir:[[:space:]]*//p")
+  test -n "$config_path"
   case "$(readlink -f "$config_path")/" in "$(readlink -f "$CC_SWITCH_CONFIG_DIR")/"*) ;; *) exit 1 ;; esac
   cc-switch config validate
   cc-switch provider list >/dev/null

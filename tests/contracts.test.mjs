@@ -42,6 +42,13 @@ test("build argument validator reports every missing external pin", () => {
   assert.ok(missingBuildArguments(versions, "ARG NODE_VERSION").includes("CC_SWITCH_VERSION"));
 });
 
+test("Dockerfile forwards yq checksums to both language installer phases", () => {
+  const dockerfile = fs.readFileSync(path.join(root, "Dockerfile"), "utf8").replaceAll("\r\n", "\n");
+  const installBlock = dockerfile.slice(dockerfile.indexOf('bash /usr/local/libexec/ai-dev-install/install-languages.sh install') - 800);
+  assert.match(installBlock, /YQ_AMD64_SHA256="\$\{YQ_AMD64_SHA256\}"/);
+  assert.match(installBlock, /YQ_ARM64_SHA256="\$\{YQ_ARM64_SHA256\}"/);
+});
+
 test("architecture assets cover exactly amd64 and arm64", () => {
   assert.deepEqual(Object.keys(contracts.architectures).sort(), ["amd64", "arm64"]);
   for (const mapping of Object.values(contracts.architectures)) {

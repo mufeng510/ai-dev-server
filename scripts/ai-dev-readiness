@@ -7,7 +7,8 @@ fi
 [ -S /var/run/docker.sock ] || { echo 'readiness: docker-socket-missing' >&2; exit 1; }
 docker version >/dev/null 2>&1 || { echo 'readiness: docker-socket-inaccessible' >&2; exit 1; }
 cc-switch --version >/dev/null 2>&1 || { echo 'readiness: cc-switch-unavailable' >&2; exit 1; }
-config_path="$(cc-switch config path)" || { echo 'readiness: cc-switch-config-path-failed' >&2; exit 1; }
+config_path="$(cc-switch config path | sed -n 's/^Config dir:[[:space:]]*//p')" || { echo 'readiness: cc-switch-config-path-failed' >&2; exit 1; }
+[ -n "${config_path}" ] && [[ "${config_path}" != *$'\n'* ]] || { echo 'readiness: cc-switch-config-path-unparseable' >&2; exit 1; }
 case "$(readlink -f "${config_path}")/" in
   "$(readlink -f "${CC_SWITCH_CONFIG_DIR}")/"*) ;;
   *) echo 'readiness: cc-switch-config-outside-active-generation' >&2; exit 1 ;;
