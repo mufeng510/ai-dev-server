@@ -1,6 +1,6 @@
 # ai-dev
 
-`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes Docker CLI/Compose/Buildx, common language toolchains, Claude Code, Codex CLI, Oh My ClaudeCode (OMC), Oh My Codex (OMX), and SaladDay `cc-switch-cli`. Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
+`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes Docker CLI/Compose/Buildx, GitHub CLI, common language toolchains, Claude Code, Codex CLI, Oh My ClaudeCode (OMC), Oh My Codex (OMX), and SaladDay `cc-switch-cli`. Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
 
 [简体中文](README.zh-CN.md)
 
@@ -52,6 +52,7 @@ The image is built from a digest-pinned Ubuntu 24.04 base, supports amd64 and ar
 | Go | Go | 1.24.5 |
 | Rust | rustc, cargo, rustup | 1.88.0, minimal profile |
 | Java | OpenJDK headless | 21 |
+| GitHub | GitHub CLI (`gh`) | 2.97.0 |
 | AI tools | Claude Code, Codex CLI | 1.0.58, 0.20.0 |
 | AI orchestration | Oh My ClaudeCode, Oh My Codex | 4.2.8, 0.20.3 |
 | Claude provider tool | SaladDay `cc-switch-cli` | 5.9.3 Linux musl CLI |
@@ -115,6 +116,17 @@ ssh-keygen -t ed25519 -C "you@example.com"
 ```
 
 Add the printed public key to the relevant Git host. Private keys persist in the selected configuration generation under `/config`.
+
+### GitHub CLI
+
+Authenticate with the browser or device flow appropriate for the host:
+
+```bash
+scripts/exec gh auth login
+scripts/exec gh auth status
+```
+
+GitHub CLI credentials persist in the selected configuration generation. Do not add tokens to Compose or commit them to a repository.
 
 ### Claude Code
 

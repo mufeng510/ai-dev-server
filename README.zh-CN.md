@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 Docker CLI/Compose/Buildx、常用语言工具链、Claude Code、Codex CLI、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）及 SaladDay `cc-switch-cli`。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
+`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 Docker CLI/Compose/Buildx、GitHub CLI、常用语言工具链、Claude Code、Codex CLI、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）及 SaladDay `cc-switch-cli`。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
 
 ## 安全警告
 
@@ -47,6 +47,7 @@ PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
 | Go | Go | 1.24.5 |
 | Rust | rustc、cargo、rustup | 1.88.0，minimal profile |
 | Java | OpenJDK headless | 21 |
+| GitHub | GitHub CLI（`gh`） | 2.97.0 |
 | AI 工具 | Claude Code、Codex CLI | 1.0.58、0.20.0 |
 | AI 编排 | Oh My ClaudeCode、Oh My Codex | 4.2.8、0.20.3 |
 | Claude 提供方工具 | SaladDay `cc-switch-cli` | 5.9.3（Linux musl CLI） |
@@ -99,6 +100,10 @@ scripts/exec git config --global user.email "you@example.com"
 scripts/shell
 ssh-keygen -t ed25519 -C "you@example.com"
 
+# GitHub CLI：浏览器或设备认证
+scripts/exec gh auth login
+scripts/exec gh auth status
+
 # Claude Code：在无头服务器上于本地浏览器完成 URL/代码流程
 scripts/exec claude auth login
 
@@ -125,7 +130,7 @@ OMC 已随镜像安装。进入目标项目后，在 Claude Code 中依次执行
 /omc-setup
 ```
 
-cc-switch 的提供方凭据、OAuth 数据、代理、同步和更新均由用户手动配置；其完整状态目录应视为机密。不要将 API 密钥放入 Compose 或提交至仓库。
+GitHub CLI 凭据会保存在所选配置代中。cc-switch 的提供方凭据、OAuth 数据、代理、同步和更新均由用户手动配置；其完整状态目录应视为机密。不要将令牌或 API 密钥放入 Compose 或提交至仓库。
 
 ## 运维与发布
 

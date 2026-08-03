@@ -51,6 +51,8 @@ test("operator documentation covers the required Milestone 7 surface", () => {
     "docker.io/jerry0510/ai-dev",
     "scripts/shell",
     "scripts/exec",
+    "GitHub CLI",
+    "gh auth login",
     "claude auth login",
     "codex login --device-auth",
     "oh-my-claudecode@omc",
