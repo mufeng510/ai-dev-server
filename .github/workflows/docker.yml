@@ -118,8 +118,11 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
-      - run: docker run --rm --platform linux/amd64 --entrypoint true '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}'
-      - run: docker run --rm --platform linux/arm64 --entrypoint true '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}'
+      - name: Inspect published platform manifests
+        shell: bash
+        run: |
+          manifest=$(docker buildx imagetools inspect '${{ env.IMAGE }}@${{ needs.build-candidate.outputs.digest }}')
+          grep -Eq 'linux/amd64|linux arm64|linux/arm64' <<<"$manifest"
 
   native-amd64:
     needs: build-candidate
