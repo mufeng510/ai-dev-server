@@ -68,7 +68,7 @@ docker run --rm --entrypoint bash "$image_ref" -lc '
   grep -Eq "Results: [0-9]+ passed, [0-9]+ warnings, 0 failed" <<<"$doctor_output"
   find /usr/local/lib/node_modules/oh-my-codex -type f -perm /111 -print -quit | grep -q .
   omc --help >/dev/null
-  OMC_STATE_DIR="$temp/omc-state" HOME="$temp/home" omc config-notify-profile --list >/dev/null
+  OMC_STATE_DIR="$temp/omc-state" HOME="$temp/home" omc config >/dev/null
   OMC_DB="$temp/omc-state.db" node -e "const modulePath=require.resolve(\"better-sqlite3\", {paths:[\"/usr/local/lib/node_modules/oh-my-claude-sisyphus\"]}); const Database=require(modulePath); const db=new Database(process.env.OMC_DB); db.exec(\"CREATE TABLE probe (value TEXT NOT NULL)\"); db.prepare(\"INSERT INTO probe VALUES (?)\").run(\"ready\"); if (db.prepare(\"SELECT value FROM probe\").get().value !== \"ready\") process.exit(1); db.close()"
   tmux -L ai-dev-native-gate new-session -d -s probe "printf ready > $temp/tmux-ready"
   for _ in 1 2 3 4 5; do test -f "$temp/tmux-ready" && break; sleep 1; done

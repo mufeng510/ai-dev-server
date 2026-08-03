@@ -186,7 +186,7 @@ test("native capability gate rejects an emulated host and validates offline stat
   assert.match(gate, /omx setup/);
   assert.match(gate, /Results: \[0-9\]\+ passed/);
   assert.match(gate, /better-sqlite3/);
-  assert.match(gate, /omc config-notify-profile --list/);
+  assert.match(gate, /omc config >\/dev\/null/);
   assert.match(gate, /tmux/);
   assert.match(gate, /flock/);
 });
