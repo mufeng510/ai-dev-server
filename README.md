@@ -53,13 +53,13 @@ The image is built from a digest-pinned Ubuntu 24.04 base, supports amd64 and ar
 | Rust | rustc, cargo, rustup | 1.88.0, minimal profile |
 | Java | OpenJDK headless | 21 |
 | GitHub | GitHub CLI (`gh`) | 2.97.0 |
-| AI tools | Claude Code, Codex CLI | 1.0.58, 0.20.0 |
-| AI orchestration | Oh My ClaudeCode, Oh My Codex | 4.2.8, 0.20.3 |
+| AI tools | Claude Code, Codex CLI | 2.1.221, 0.146.0 |
+| AI orchestration | Oh My ClaudeCode, Oh My Codex | 4.15.7, 0.20.3 |
 | Claude provider tool | SaladDay `cc-switch-cli` | 5.9.3 Linux musl CLI |
 | Development tools | Git, Git LFS, OpenSSH client, tmux, Zsh, Bash, GCC, Clang, CMake, make, pkg-config | Installed from Ubuntu repositories |
 | Command-line tools | `curl`, `wget`, `jq`, `yq` 4.47.1, `rg`, `fd`, `fzf`, `sqlite3`, ShellCheck | `fd` is a compatibility alias for `fdfind` |
 
-Runtime self-updates are disabled. Caches live under `/data/cache`, while configuration, credentials, and projects are persisted through the named volumes below. Check a running image with `scripts/exec <command> --version`.
+The AI CLI support baseline includes Node.js 24 (the OMC and OMX runtime), Python 3 plus a native build toolchain and SQLite (native Node module fallback), and Git, `rg`, `jq`, `tmux`, `curl`, and `tar` for the supported CLI workflows. Runtime self-updates are disabled. Caches live under `/data/cache`, while configuration, credentials, and projects are persisted through the named volumes below. Check a running image with `scripts/exec <command> --version`.
 
 ## Persistent Volumes
 

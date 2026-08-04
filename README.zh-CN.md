@@ -48,13 +48,13 @@ PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
 | Rust | rustc、cargo、rustup | 1.88.0，minimal profile |
 | Java | OpenJDK headless | 21 |
 | GitHub | GitHub CLI（`gh`） | 2.97.0 |
-| AI 工具 | Claude Code、Codex CLI | 1.0.58、0.20.0 |
-| AI 编排 | Oh My ClaudeCode、Oh My Codex | 4.2.8、0.20.3 |
+| AI 工具 | Claude Code、Codex CLI | 2.1.221、0.146.0 |
+| AI 编排 | Oh My ClaudeCode、Oh My Codex | 4.15.7、0.20.3 |
 | Claude 提供方工具 | SaladDay `cc-switch-cli` | 5.9.3（Linux musl CLI） |
 | 常用开发工具 | Git、Git LFS、OpenSSH client、tmux、Zsh、Bash、GCC、Clang、CMake、make、pkg-config | 来自 Ubuntu 软件源 |
 | 常用命令行工具 | `curl`、`wget`、`jq`、`yq` 4.47.1、`rg`、`fd`、`fzf`、`sqlite3`、ShellCheck | `fd` 是 `fdfind` 的兼容别名 |
 
-镜像已禁用工具自更新；缓存存放在 `/data/cache`，配置、凭据和项目数据由下方的命名卷持久化。可在运行中的容器中使用 `scripts/exec <command> --version` 查看实际安装版本。
+AI CLI 运行环境包括 Node.js 24（OMC 和 OMX 的运行时）、Python 3、原生编译工具链和 SQLite（原生 Node 模块的回退编译），以及受支持 CLI 工作流所需的 Git、`rg`、`jq`、`tmux`、`curl` 和 `tar`。镜像已禁用工具自更新；缓存存放在 `/data/cache`，配置、凭据和项目数据由下方的命名卷持久化。可在运行中的容器中使用 `scripts/exec <command> --version` 查看实际安装版本。
 
 ## 持久化卷
 

@@ -2,7 +2,7 @@
 
 set -eu
 
-readonly CLAUDE_RELEASE_BASE_URL="https://downloads.claude.ai/claude-code-releases"
+readonly CLAUDE_RELEASE_BASE_URL="https://github.com/anthropics/claude-code/releases/download"
 readonly CODEX_INSTALLER_URL="https://chatgpt.com/codex/install.sh"
 readonly CC_SWITCH_REPOSITORY="SaladDay/cc-switch-cli"
 
@@ -53,13 +53,17 @@ single_extracted_file() {
 
 install_claude() {
   case "$TARGETARCH" in
-    amd64) claude_platform=linux-x64; claude_checksum=$CLAUDE_AMD64_SHA256 ;;
-    arm64) claude_platform=linux-arm64; claude_checksum=$CLAUDE_ARM64_SHA256 ;;
+    amd64) claude_asset=claude-linux-x64.tar.gz; claude_checksum=$CLAUDE_AMD64_SHA256 ;;
+    arm64) claude_asset=claude-linux-arm64.tar.gz; claude_checksum=$CLAUDE_ARM64_SHA256 ;;
     *) fail "unsupported TARGETARCH for Claude Code: $TARGETARCH" ;;
   esac
-  binary="$work_dir/claude"
-  fetch "$CLAUDE_RELEASE_BASE_URL/$CLAUDE_CODE_VERSION/$claude_platform/claude" "$binary"
-  verify_sha256 "$binary" "$claude_checksum"
+  archive="$work_dir/$claude_asset"
+  extract_dir="$work_dir/claude-extract"
+  fetch "$CLAUDE_RELEASE_BASE_URL/v$CLAUDE_CODE_VERSION/$claude_asset" "$archive"
+  verify_sha256 "$archive" "$claude_checksum"
+  mkdir -p "$extract_dir"
+  tar -xzf "$archive" -C "$extract_dir"
+  binary="$(single_extracted_file "$extract_dir" claude)"
   install -m 0755 "$binary" "$INSTALL_PREFIX/bin/claude"
   "$INSTALL_PREFIX/bin/claude" --version | grep -F "$CLAUDE_CODE_VERSION" >/dev/null || fail "Claude Code version verification failed"
 }

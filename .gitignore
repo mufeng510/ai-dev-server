@@ -7,8 +7,14 @@ dist/
 build/
 coverage/
 .omx/
+.omx_backup/
 .buildx-cache/
 .buildx-cache-new/
+
+# oh-my-claudecode runtime state (ignored) — except project-scoped skills, which are committable
+.omc/
+!.omc/skills/
+!.omc/skills/**
 
 *.log
 *.tmp

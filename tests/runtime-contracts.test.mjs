@@ -179,8 +179,17 @@ test("normal startup never recursively changes ownership and OMX setup is determ
 
 test("official native installers remain pinned and noninteractive", () => {
   const installer = read("install/install-ai-tools.sh");
-  assert.match(installer, /https:\/\/downloads\.claude\.ai\/claude-code-releases/);
+  assert.match(installer, /https:\/\/github\.com\/anthropics\/claude-code\/releases\/download/);
   assert.match(installer, /CLAUDE_RELEASE_BASE_URL/);
+  assert.match(installer, /claude-linux-x64\.tar\.gz/);
+  assert.match(installer, /claude-linux-arm64\.tar\.gz/);
+  assert.match(installer, /\$CLAUDE_RELEASE_BASE_URL\/v\$CLAUDE_CODE_VERSION\/\$claude_asset/);
+  assertOrdered(installer, [
+    'fetch "$CLAUDE_RELEASE_BASE_URL/v$CLAUDE_CODE_VERSION/$claude_asset" "$archive"',
+    'verify_sha256 "$archive" "$claude_checksum"',
+    'tar -xzf "$archive" -C "$extract_dir"',
+    'single_extracted_file "$extract_dir" claude'
+  ]);
   assert.match(installer, /CLAUDE_AMD64_SHA256/);
   assert.match(installer, /CLAUDE_ARM64_SHA256/);
   assert.match(installer, /Claude Code version verification failed/);
