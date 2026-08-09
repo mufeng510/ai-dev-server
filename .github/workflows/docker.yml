@@ -24,9 +24,70 @@ jobs:
       - run: docker compose config --quiet
       - run: docker buildx bake --print
 
+  detect-image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.detect.outputs.build }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+          build=false
+          reason=paths-skipped
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            build=true
+            reason=tag
+          else
+            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              base="${{ github.event.pull_request.base.sha }}"
+              head="${{ github.event.pull_request.head.sha }}"
+            else
+              base="${{ github.event.before }}"
+              head="${{ github.sha }}"
+            fi
+            if [[ -z "${base}" || "${base}" =~ ^0+$ ]]; then
+              build=true
+              reason=no-base
+            else
+              # Image/deploy allowlist: only these paths start expensive image jobs.
+              patterns=(
+                '^Dockerfile$'
+                '^\.dockerignore$'
+                '^docker-bake\.hcl$'
+                '^docker-compose\.yml$'
+                '^entrypoint\.sh$'
+                '^versions\.env$'
+                '^install/'
+                '^config/'
+                '^scripts/ai-dev'
+                '^scripts/ci-lifecycle-gate\.sh$'
+                '^scripts/release-.*\.mjs$'
+                '^scripts/release-native-gate\.sh$'
+                '^\.github/workflows/docker\.yml$'
+              )
+              while IFS= read -r file; do
+                [[ -z "${file}" ]] && continue
+                for pattern in "${patterns[@]}"; do
+                  if [[ "${file}" =~ ${pattern} ]]; then
+                    build=true
+                    reason=paths-matched
+                    break 2
+                  fi
+                done
+              done < <(git diff --name-only "${base}" "${head}")
+            fi
+          fi
+          printf 'build=%s\n' "${build}" >> "${GITHUB_OUTPUT}"
+          printf 'detect-image build=%s reason=%s\n' "${build}" "${reason}"
+
   pr-amd64:
-    if: github.event_name == 'pull_request'
-    needs: static
+    if: github.event_name == 'pull_request' && needs.detect-image.outputs.build == 'true'
+    needs: [static, detect-image]
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -37,8 +98,8 @@ jobs:
       - run: bash scripts/ci-lifecycle-gate.sh ai-dev:test
 
   build-candidate:
-    if: github.event_name == 'push'
-    needs: static
+    if: github.event_name == 'push' && needs.detect-image.outputs.build == 'true'
+    needs: [static, detect-image]
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     permissions:

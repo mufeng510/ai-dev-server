@@ -258,7 +258,7 @@ Run `scripts/exec cc-switch` for the TUI. Provider credentials, OAuth material, 
 | Stable `vX.Y.Z` | `vX.Y.Z`, `X.Y.Z`, `X.Y`, `X`, `YYYY.MM`, `latest` |
 | Prerelease `vX.Y.Z-rc.N` | `vX.Y.Z-rc.N`, `X.Y.Z-rc.N` only |
 
-Stable publication requires native amd64 and arm64 gates against the candidate digest. QEMU smoke tests are supplemental. CI also checks static contracts, Compose/Bake configuration, image tool versions, release policy, SBOM, provenance, and artifact attestation. Local `npm run validate` can skip unavailable host tools and is not evidence that Docker builds or native release gates passed.
+Stable publication requires native amd64 and arm64 gates against the candidate digest. QEMU smoke tests are supplemental. CI always runs static contracts, Compose/Bake configuration checks, and release-policy validation. Expensive image build, native gate, publish, and promote jobs run only when image/deploy-relevant paths change, and always for version tags. Successful image publishes still carry SBOM, provenance, and artifact attestation. Local `npm run validate` can skip unavailable host tools and is not evidence that Docker builds or native release gates passed.
 
 ## License
 

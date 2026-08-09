@@ -16,7 +16,7 @@
 | `config/` | Static contracts, managed routes, and copy-if-missing defaults |
 | `docs/tool-state-contract.md` | **Source of truth** for durable tool config/credential placement across container recreate |
 | `docker-compose.yml`, `docker-bake.hcl` | Runtime and build contracts |
-| `.github/workflows/docker.yml` | Multi-architecture build, native gates, and release promotion |
+| `.github/workflows/docker.yml` | Multi-architecture build, native gates, and release promotion; image jobs are path-gated so non-image changes still run static checks only |
 | `tests/` | Offline Node contract tests and fixtures |
 
 ## Validation

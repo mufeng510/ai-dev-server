@@ -281,3 +281,68 @@ test("reconciliation ledgers are retained after a failed registry write", () => 
     assert.match(block, /actions\/upload-artifact@[a-f0-9]{40}[\s\S]*?if:\s*always\(\)/);
   }
 });
+
+const IMAGE_DEPLOY_ALLOWLIST = [
+  "Dockerfile",
+  "dockerignore",
+  "docker-bake",
+  "docker-compose",
+  "entrypoint",
+  "versions",
+  "install/",
+  "config/",
+  "scripts/ai-dev",
+  "ci-lifecycle-gate",
+  "scripts/release-",
+  "release-native-gate",
+  "workflows/docker"
+];
+
+test("workflow trigger surface has no whole-workflow path filters or manual dispatch", () => {
+  const trigger = yamlBlock(read(workflowPath), "on", 0);
+  assert.doesNotMatch(trigger, /workflow_dispatch/);
+  assert.doesNotMatch(trigger, /^\s+paths:/m);
+  assert.doesNotMatch(trigger, /^\s+paths-ignore:/m);
+});
+
+test("static validation always runs and is not path-gated", () => {
+  const staticJob = yamlBlock(read(workflowPath), "static");
+  assert.doesNotMatch(staticJob, /^\s+if:/m);
+  assert.doesNotMatch(staticJob, /detect-image/);
+  assert.match(staticJob, /npm test/);
+  assert.match(staticJob, /docker compose config --quiet/);
+  assert.match(staticJob, /docker buildx bake --print/);
+});
+
+test("detect-image path-gates expensive image jobs while tags always build", () => {
+  const workflow = read(workflowPath);
+  const detect = yamlBlock(workflow, "detect-image");
+  const pullRequest = yamlBlock(workflow, "pr-amd64");
+  const build = yamlBlock(workflow, "build-candidate");
+
+  assert.match(detect, /outputs:[\s\S]*build:\s*\$\{\{\s*steps\.detect\.outputs\.build\s*\}\}/);
+  assert.match(detect, /GITHUB_REF_TYPE[\s\S]*==[\s\S]*tag/);
+  assert.match(detect, /reason=tag/);
+  assert.match(detect, /reason=no-base/);
+  assert.match(detect, /reason=paths-matched/);
+  assert.match(detect, /reason=paths-skipped/);
+  assert.match(detect, /github\.event\.before/);
+  assert.match(detect, /\^0\+/);
+  assert.match(detect, /git diff --name-only/);
+
+  for (const entry of IMAGE_DEPLOY_ALLOWLIST) {
+    assert.match(detect, new RegExp(entry.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+
+  assert.match(
+    pullRequest,
+    /if:\s*github\.event_name\s*==\s*['"]pull_request['"]\s*&&\s*needs\.detect-image\.outputs\.build\s*==\s*['"]true['"]/
+  );
+  assert.match(pullRequest, /needs:\s*\[static,\s*detect-image\]/);
+
+  assert.match(
+    build,
+    /if:\s*github\.event_name\s*==\s*['"]push['"]\s*&&\s*needs\.detect-image\.outputs\.build\s*==\s*['"]true['"]/
+  );
+  assert.match(build, /needs:\s*\[static,\s*detect-image\]/);
+});
