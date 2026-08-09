@@ -78,10 +78,17 @@ The Compose project name is `ai-dev`, so Docker normally names these volumes `ai
 
 ## Use The Environment
 
-Open the supported Zsh session as `dev`:
+Open the supported Zsh session as `dev` (from the Compose project directory):
 
 ```bash
 scripts/shell
+```
+
+That is the normal entry path. It runs as `dev` through `ai-dev-shell` / `ai-dev-run`, so generation exports such as `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `GH_CONFIG_DIR` are applied. Equivalents:
+
+```bash
+docker compose exec --user dev ai-dev ai-dev-shell
+docker exec -it --user dev ai-dev ai-dev-shell
 ```
 
 Run one command through the same generation resolver:
@@ -93,14 +100,59 @@ scripts/exec ai-dev readiness
 scripts/exec ai-dev doctor
 ```
 
-Use tmux to retain a session across host SSH disconnects:
+### Keep A Session With tmux
+
+tmux runs **inside** the container. Use it so host SSH disconnects do not kill your shell work:
 
 ```bash
 scripts/shell
 tmux new -As dev
 ```
 
-Later, re-run `scripts/shell` and `tmux attach -t dev`. The image does not run an SSH daemon; SSH to the Docker host, then use the wrappers. A bare `docker compose exec ai-dev sh` starts as root and is a recovery interface, not a normal development shell.
+Or from the host in one step: `scripts/tmux`.
+
+- First time: creates a session named `dev` and attaches.
+- Later: the same command reattaches if the session still exists (`-A`), or creates it again if not.
+- Detach without stopping work: `Ctrl-b` then `d`, then leave the container.
+- Reattach later:
+
+```bash
+scripts/shell
+tmux attach -t dev
+# same effect:
+tmux new -As dev
+```
+
+From the Compose project directory, open tmux in one step:
+
+```bash
+scripts/tmux
+```
+
+That runs `docker compose exec --user dev ai-dev ai-dev-run tmux new -As dev`. Equivalents:
+
+```bash
+docker compose exec --user dev ai-dev ai-dev-run tmux new -As dev
+docker exec -it --user dev ai-dev ai-dev-run tmux new -As dev
+```
+
+Optional host-wide shortcut (any directory; requires container name `ai-dev`):
+
+```bash
+# bash/zsh — add to ~/.bashrc or ~/.zshrc
+alias ai-dev-tmux='docker exec -it --user dev ai-dev ai-dev-run tmux new -As dev'
+
+# then:
+ai-dev-tmux
+```
+
+Useful checks inside the container: `tmux ls`, `tmux kill-session -t dev`.
+
+Notes:
+
+- The image does not run an SSH daemon; SSH to the Docker host, then use `scripts/shell` / `scripts/exec` (or the `docker exec` forms above).
+- A bare `docker compose exec ai-dev sh` starts as root and is a recovery interface, not a normal development shell.
+- tmux session state lives in the container process. `docker compose restart` or recreating the container ends the session; tool config in named volumes is separate and persists. `~/.tmux.conf` is managed into the active generation.
 
 ## Manual Setup
 

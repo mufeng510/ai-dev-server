@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Attach or create the in-container tmux session named "dev" through the supported resolver.
+exec docker compose exec --user dev ai-dev ai-dev-run tmux new -As dev

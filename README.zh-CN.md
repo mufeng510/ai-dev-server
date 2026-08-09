@@ -71,23 +71,80 @@ Compose 会创建六个命名卷。项目名为 `ai-dev`，卷通常命名为 `a
 
 ## 使用环境
 
-使用受支持的 `dev` Zsh 会话：
+在 Compose 项目目录下，打开受支持的 `dev` Zsh 会话：
 
 ```bash
 scripts/shell
+```
+
+这是日常入口：以 `dev` 用户经 `ai-dev-shell` / `ai-dev-run` 启动，会导出当前配置代环境（如 `CLAUDE_CONFIG_DIR`、`CODEX_HOME`、`GH_CONFIG_DIR`）。等价写法：
+
+```bash
+docker compose exec --user dev ai-dev ai-dev-shell
+docker exec -it --user dev ai-dev ai-dev-shell
+```
+
+只跑一条命令时用同一套解析器：
+
+```bash
 scripts/exec git --version
 scripts/exec ai-dev readiness
 scripts/exec ai-dev doctor
 ```
 
-通过 tmux 保持 SSH 断开后的工作会话：
+### 用 tmux 保持会话
+
+tmux 运行在**容器内**，用于在宿主机 SSH 断开后仍保留工作会话：
 
 ```bash
 scripts/shell
 tmux new -As dev
 ```
 
-之后重新运行 `scripts/shell` 并执行 `tmux attach -t dev`。镜像不提供 SSH 服务；应先 SSH 登录 Docker 主机，再使用上述封装。`docker compose exec ai-dev sh` 会以 root 启动，仅用于恢复。
+或在宿主机一步完成：`scripts/tmux`。
+
+- 首次：创建名为 `dev` 的会话并进入。
+- 之后：同一命令在会话仍存在时重新附着（`-A`），不存在则新建。
+- 暂时离开、不结束工作：`Ctrl-b` 再按 `d`（detach），然后退出容器。
+- 再次进入：
+
+```bash
+scripts/shell
+tmux attach -t dev
+# 效果相同：
+tmux new -As dev
+```
+
+在 Compose 项目目录下一键进入 tmux：
+
+```bash
+scripts/tmux
+```
+
+等价于 `docker compose exec --user dev ai-dev ai-dev-run tmux new -As dev`。其它写法：
+
+```bash
+docker compose exec --user dev ai-dev ai-dev-run tmux new -As dev
+docker exec -it --user dev ai-dev ai-dev-run tmux new -As dev
+```
+
+可选：在宿主机加全局快捷命令（任意目录，依赖容器名 `ai-dev`）：
+
+```bash
+# bash/zsh — 写入 ~/.bashrc 或 ~/.zshrc
+alias ai-dev-tmux='docker exec -it --user dev ai-dev ai-dev-run tmux new -As dev'
+
+# 之后：
+ai-dev-tmux
+```
+
+容器内常用：`tmux ls`、`tmux kill-session -t dev`。
+
+说明：
+
+- 镜像不提供 SSH 服务；应先 SSH 登录 Docker 主机，再使用 `scripts/shell` / `scripts/exec`（或上面的 `docker exec` 形式）。
+- `docker compose exec ai-dev sh` 会以 root 启动，仅用于恢复，不是日常开发 shell。
+- tmux 会话属于容器进程：`docker compose restart` 或重建容器会结束会话；命名卷中的工具配置与此无关，仍会保留。`~/.tmux.conf` 由当前配置代托管。
 
 ## 手动配置
 

@@ -48,6 +48,7 @@ test("runtime surface and persistence roots are complete", () => {
     "scripts/ai-dev-rollback",
     "scripts/ai-dev-migrate-identity",
     "scripts/shell",
+    "scripts/tmux",
     "scripts/exec"
   ];
   for (const relativePath of required) assert.ok(fs.existsSync(path.join(root, relativePath)), relativePath);
@@ -96,6 +97,8 @@ test("supported shell and exec paths always route through ai-dev-run", () => {
 
   assert.match(shell, /docker compose exec --user dev ai-dev ai-dev-shell/);
   assert.match(exec, /docker compose exec --user dev ai-dev ai-dev-run/);
+  const tmux = read("scripts/tmux");
+  assert.match(tmux, /docker compose exec --user dev ai-dev ai-dev-run tmux new -As dev/);
   assert.match(containerShell, /id -u dev/);
   assert.match(containerShell, /Docker Socket group access/);
   assert.match(containerShell, /exec ai-dev-run zsh -l/);
