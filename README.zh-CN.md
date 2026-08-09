@@ -199,7 +199,7 @@ GitHub CLI 凭据通过当前配置代中的 `GH_CONFIG_DIR` 持久化（见[工
 - [开发与验证](docs/development.md)
 - [贡献指南](CONTRIBUTING.md)
 
-`main` 会发布 `edge` 与 `sha-<short-sha>`。稳定版 `vX.Y.Z` 会发布 `vX.Y.Z`、`X.Y.Z`、`X.Y`、`X`、`YYYY.MM` 和 `latest`；预发布版本只发布其完整预发布标签。稳定发布须通过候选镜像的原生 amd64 和 arm64 验证，QEMU 冒烟测试仅作补充。
+`main` 会发布 `edge` 与 `sha-<short-sha>`。稳定版 `vX.Y.Z` 会发布 `vX.Y.Z`、`X.Y.Z`、`X.Y`、`X`、`YYYY.MM` 和 `latest`；预发布版本只发布其完整预发布标签。稳定发布须通过候选镜像的原生 amd64 和 arm64 验证，QEMU 冒烟测试仅作补充。CI 始终运行静态合约、Compose/Bake 配置与 release-policy 校验；昂贵的镜像构建、原生门禁、发布与晋升作业仅在镜像/部署相关路径变更时运行，并在版本 tag 上始终运行。成功的镜像发布仍会携带 SBOM、provenance 与 artifact attestation。本地 `npm run validate` 在可选工具不可用时可能跳过检查，不能作为 Docker 构建或原生发布门禁已通过的证据。
 
 ## 许可证
 
