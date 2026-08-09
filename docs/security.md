@@ -8,7 +8,7 @@ Running the default workload as `dev`, omitting Compose `privileged`, and granti
 
 ## Secrets
 
-The public image contains no user credentials. Authentication is manual and persists in the selected `/config` generation. Sensitive state includes:
+The public image contains no user credentials. Authentication is manual and persists in the selected `/config` generation per the [Tool State Contract](tool-state-contract.md). Sensitive state includes:
 
 - Claude and Codex authentication files
 - SSH private keys and Git credential configuration

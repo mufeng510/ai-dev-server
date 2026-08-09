@@ -33,7 +33,7 @@ Normal startup rejects leftover migration, rollback, or identity journals. Keep 
 
 ## Managed Route Is Unsafe
 
-Startup only replaces registered links it owns. A regular file, an external symlink, or a link to an unregistered generation at a managed path causes a closed failure. Move the conflicting path aside from a root recovery session, verify its contents, then restart. Managed routes are `.ssh`, `.config/git`, `.config/zsh`, and `.config/claude-omc` under `/home/dev`.
+Startup only replaces registered links it owns. A regular file, an external symlink, or a link to an unregistered generation at a managed path causes a closed failure. Move the conflicting path aside from a root recovery session, verify its contents, then restart. Managed routes are `.ssh`, `.config/git`, `.config/zsh`, `.config/claude-omc`, and `.config/gh` under `/home/dev`.
 
 ## Login Does Not Open A Browser
 

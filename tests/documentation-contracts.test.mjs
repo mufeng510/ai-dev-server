@@ -35,6 +35,7 @@ test("operator documentation covers the required Milestone 7 surface", () => {
     "README.md",
     "README.zh-CN.md",
     "docs/architecture.md",
+    "docs/tool-state-contract.md",
     "docs/security.md",
     "docs/upgrade.md",
     "docs/troubleshooting.md",
@@ -79,5 +80,33 @@ test("documentation links resolve locally", () => {
       const localPath = destination.split("#", 1)[0];
       assert.ok(fs.existsSync(path.resolve(root, path.dirname(relativePath), localPath)), `${relativePath}: ${destination}`);
     }
+  }
+});
+
+test("Tool State Contract is the persistence development source of truth", () => {
+  const contract = read("docs/tool-state-contract.md");
+  const development = read("docs/development.md");
+  const architecture = read("docs/architecture.md");
+  const contributing = read("CONTRIBUTING.md");
+  const readme = read("README.md");
+  const chineseReadme = read("README.zh-CN.md");
+
+  assert.match(contract, /Tool State Contract/);
+  assert.match(contract, /development source of truth/i);
+  assert.match(contract, /Architectural Invariants/);
+  assert.match(contract, /Tool State Checklist/);
+  assert.match(contract, /GH_CONFIG_DIR/);
+  assert.match(contract, /ai-dev-run/);
+  assert.match(contract, /Update this document in the \*\*same commit\/PR\*\*/i);
+  assert.match(contract, /Explicitly Rejected Designs/);
+
+  for (const [name, source] of [
+    ["development", development],
+    ["architecture", architecture],
+    ["contributing", contributing],
+    ["README", readme],
+    ["README.zh-CN", chineseReadme]
+  ]) {
+    assert.match(source, /tool-state-contract\.md/, `${name} must link the Tool State Contract`);
   }
 });

@@ -11,18 +11,52 @@
     }
   },
   "persistence": [
-    { "volume": "workspace", "path": "/workspace" },
-    { "volume": "config", "path": "/config" },
-    { "volume": "data", "path": "/data" },
-    { "volume": "logs", "path": "/logs" },
-    { "volume": "models", "path": "/models" },
-    { "volume": "backups", "path": "/backups" }
+    {
+      "volume": "workspace",
+      "path": "/workspace"
+    },
+    {
+      "volume": "config",
+      "path": "/config"
+    },
+    {
+      "volume": "data",
+      "path": "/data"
+    },
+    {
+      "volume": "logs",
+      "path": "/logs"
+    },
+    {
+      "volume": "models",
+      "path": "/models"
+    },
+    {
+      "volume": "backups",
+      "path": "/backups"
+    }
   ],
   "managedRoutes": [
-    { "homePath": ".config/claude-omc", "generationPath": "omc" },
-    { "homePath": ".ssh", "generationPath": "ssh" },
-    { "homePath": ".config/git", "generationPath": "git" },
-    { "homePath": ".config/zsh", "generationPath": "zsh" }
+    {
+      "homePath": ".config/claude-omc",
+      "generationPath": "omc"
+    },
+    {
+      "homePath": ".config/gh",
+      "generationPath": "gh"
+    },
+    {
+      "homePath": ".ssh",
+      "generationPath": "ssh"
+    },
+    {
+      "homePath": ".config/git",
+      "generationPath": "git"
+    },
+    {
+      "homePath": ".config/zsh",
+      "generationPath": "zsh"
+    }
   ],
   "stateMachines": {
     "initialization": [
@@ -59,13 +93,39 @@
     ]
   },
   "release": {
-    "mainTags": ["edge", "sha-{shortSha}"],
-    "stableTags": ["v{version}", "{version}", "{major}.{minor}", "{major}", "{year}.{month}", "latest"],
-    "prereleaseTags": ["v{version}", "{version}"],
-    "movingChannels": ["{major}.{minor}", "{major}", "{year}.{month}", "latest"]
+    "mainTags": [
+      "edge",
+      "sha-{shortSha}"
+    ],
+    "stableTags": [
+      "v{version}",
+      "{version}",
+      "{major}.{minor}",
+      "{major}",
+      "{year}.{month}",
+      "latest"
+    ],
+    "prereleaseTags": [
+      "v{version}",
+      "{version}"
+    ],
+    "movingChannels": [
+      "{major}.{minor}",
+      "{major}",
+      "{year}.{month}",
+      "latest"
+    ]
   },
   "redaction": {
-    "keyPatterns": ["token", "secret", "password", "authorization", "api_key", "private_key", "refresh_token"],
+    "keyPatterns": [
+      "token",
+      "secret",
+      "password",
+      "authorization",
+      "api_key",
+      "private_key",
+      "refresh_token"
+    ],
     "valuePatterns": [
       "sk-[A-Za-z0-9_-]{8,}",
       "gh[pousr]_[A-Za-z0-9]{8,}",
@@ -75,4 +135,3 @@
     "replacement": "[REDACTED]"
   }
 }
-

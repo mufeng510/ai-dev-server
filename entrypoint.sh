@@ -134,7 +134,7 @@ if [ ! -e "${AI_DEV_POINTER}" ]; then
   generation_id=g000001
   generation="${AI_DEV_GENERATIONS}/${generation_id}"
   install -d -o dev -g dev -m 0700 "${generation}"
-  for directory in claude omc cc-switch git ssh zsh; do install -d -o dev -g dev -m 0700 "${generation}/${directory}"; done
+  for directory in claude omc cc-switch git ssh zsh gh; do install -d -o dev -g dev -m 0700 "${generation}/${directory}"; done
   printf '%s\n' "${AI_DEV_CONFIG_SCHEMA:-1}" | ai_dev_atomic_write "${generation}/schema-version" 0600
   [ -e "${generation}/zsh/.zshrc" ] || install -m 0600 "${AI_DEV_DEFAULTS_DIR}/zshrc" "${generation}/zsh/.zshrc"
   [ -e "${generation}/tmux.conf" ] || install -m 0600 "${AI_DEV_DEFAULTS_DIR}/tmux.conf" "${generation}/tmux.conf"
@@ -173,8 +173,10 @@ fi
 ai_dev_resolve_generation || fail 'active generation is corrupt'
 chmod 0644 "${AI_DEV_POINTER}"
 chown root:root "${AI_DEV_POINTER}"
+# Non-destructive ensure for newly contracted roots so existing generations remain bootable.
+install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/gh"
 ai_dev_validate_generation "${AI_DEV_GENERATION_ID}" || fail 'active generation is incomplete or unsafe'
-chmod 0700 "${AI_DEV_GENERATION}/claude" "${AI_DEV_GENERATION}/codex" "${AI_DEV_GENERATION}/omc" "${AI_DEV_GENERATION}/ssh"
+chmod 0700 "${AI_DEV_GENERATION}/claude" "${AI_DEV_GENERATION}/codex" "${AI_DEV_GENERATION}/omc" "${AI_DEV_GENERATION}/ssh" "${AI_DEV_GENERATION}/gh"
 ai_dev_secure_state "${AI_DEV_GENERATION}/cc-switch" || fail 'cc-switch state has unsafe permissions'
 find "${AI_DEV_GENERATION}/ssh" -xdev -type f -exec chmod 0600 {} +
 [ ! -f "${AI_DEV_GENERATION}/codex/auth.json" ] || chmod 0600 "${AI_DEV_GENERATION}/codex/auth.json"

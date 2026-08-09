@@ -11,6 +11,7 @@ Open an issue for changes that alter the persistence model, security boundary, i
 3. Keep build inputs immutable and version-qualified; do not add runtime self-update behavior.
 4. Update documentation when commands, Compose defaults, volumes, authentication, migration, or release policy changes.
 5. Preserve the raw Docker Socket warning before Quick Start in `README.md`.
+6. Follow [`docs/tool-state-contract.md`](docs/tool-state-contract.md) for any preinstalled-tool configuration, credential, managed-route, or recreate-persistence change. Update that contract inventory in the same PR as code and tests; do not leave README claims ahead of runtime export.
 
 Use focused, imperative commits, optionally with `feat:`, `fix:`, `test:`, or `docs:` prefixes.
 
@@ -27,6 +28,14 @@ git diff --stat
 ```
 
 Run `npm run validate` when Docker and the optional linters are available. Use `npm run validate:strict` when the complete local toolchain is installed. State exactly which commands ran and which checks were skipped. Do not describe offline contract tests as Docker builds or native amd64/arm64 evidence.
+
+## Tool Persistence
+
+If the change touches generations, `ai-dev-run` exports, managed routes, doctor/readiness path checks, or tool login durability:
+
+- use the PR checklist in [Tool State Contract](docs/tool-state-contract.md)
+- keep `config/managed-routes.tsv` and `config/contracts.json` mirrored
+- reject dual live state under both `/home/dev` and `/config/generations`
 
 ## Pull Requests
 

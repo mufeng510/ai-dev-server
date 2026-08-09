@@ -126,7 +126,7 @@ scripts/exec gh auth login
 scripts/exec gh auth status
 ```
 
-GitHub CLI credentials persist in the selected configuration generation. Do not add tokens to Compose or commit them to a repository.
+GitHub CLI credentials persist through `GH_CONFIG_DIR` in the active configuration generation (see the [Tool State Contract](docs/tool-state-contract.md)). Do not add tokens to Compose or commit them to a repository.
 
 ### Claude Code
 
@@ -193,6 +193,7 @@ Run `scripts/exec cc-switch` for the TUI. Provider credentials, OAuth material, 
 - [Upgrade, migration, rollback, backup, and restore](docs/upgrade.md)
 - [Troubleshooting and FAQ](docs/troubleshooting.md)
 - [Architecture and persistence model](docs/architecture.md)
+- [Tool state contract](docs/tool-state-contract.md) (development source of truth for recreate-safe tool config)
 - [Security model](docs/security.md)
 - [Development and validation](docs/development.md)
 - [Contributing](CONTRIBUTING.md)

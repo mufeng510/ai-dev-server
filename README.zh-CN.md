@@ -130,13 +130,14 @@ OMC 已随镜像安装。进入目标项目后，在 Claude Code 中依次执行
 /omc-setup
 ```
 
-GitHub CLI 凭据会保存在所选配置代中。cc-switch 的提供方凭据、OAuth 数据、代理、同步和更新均由用户手动配置；其完整状态目录应视为机密。不要将令牌或 API 密钥放入 Compose 或提交至仓库。
+GitHub CLI 凭据通过当前配置代中的 `GH_CONFIG_DIR` 持久化（见[工具状态契约](docs/tool-state-contract.md)）。cc-switch 的提供方凭据、OAuth 数据、代理、同步和更新均由用户手动配置；其完整状态目录应视为机密。不要将令牌或 API 密钥放入 Compose 或提交至仓库。
 
 ## 运维与发布
 
 - [升级、迁移、回滚、备份和恢复](docs/upgrade.md)
 - [故障排除与常见问题](docs/troubleshooting.md)
 - [架构与持久化模型](docs/architecture.md)
+- [工具状态契约](docs/tool-state-contract.md)（预装工具可重建持久化的开发真源）
 - [安全模型](docs/security.md)
 - [开发与验证](docs/development.md)
 - [贡献指南](CONTRIBUTING.md)

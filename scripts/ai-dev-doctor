@@ -21,4 +21,9 @@ cc-switch provider list >/dev/null || { echo 'cc-switch: provider inventory fail
 if cc-switch auth status --json >/dev/null 2>&1; then echo 'cc-switch-auth=authenticated'; else echo 'cc-switch-auth=unauthenticated'; fi
 if claude auth status --json >/dev/null 2>&1; then echo 'claude-auth=authenticated'; else echo 'claude-auth=unauthenticated'; fi
 if codex login status >/dev/null 2>&1; then echo 'codex-auth=authenticated'; else echo 'codex-auth=unauthenticated'; fi
+if gh auth status >/dev/null 2>&1; then echo 'gh-auth=authenticated'; else echo 'gh-auth=unauthenticated'; fi
+case "${GH_CONFIG_DIR}/" in
+  "${AI_DEV_GENERATION}/gh/") ;;
+  *) echo 'gh: GH_CONFIG_DIR is outside active generation' >&2; exit 1 ;;
+esac
 omx doctor

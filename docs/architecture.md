@@ -10,14 +10,17 @@ The image keeps Docker's configured user as root because startup must create fre
 
 Six named volumes mount at `/workspace`, `/config`, `/data`, `/logs`, `/models`, and `/backups`. `/workspace` owns projects and repository-local state. `/config` owns credentials and versioned user configuration. The remaining volumes separate caches, logs, models, and backups from the image.
 
+**Development source of truth for tool durability:** [Tool State Contract](tool-state-contract.md). All preinstalled-tool persistence work follows that checklist and inventory; keep it synchronized when export paths, managed routes, or recreate semantics change.
+
 Managed configuration is stored under `/config/generations/<generation-id>`. The regular file `/config/active-generation` selects the complete live generation. `ai-dev-run` validates that pointer before exporting:
 
 - `CLAUDE_CONFIG_DIR=<generation>/claude`
 - `CODEX_HOME=<generation>/codex`
 - `OMC_STATE_DIR=<generation>/omc`
 - `CC_SWITCH_CONFIG_DIR=<generation>/cc-switch`
+- `GH_CONFIG_DIR=<generation>/gh`
 
-Managed links for SSH, Git, Zsh, and OMC point into the selected generation. Unsafe files or links at managed paths fail closed rather than being overwritten. Repository-local OMC and OMX state remains in `/workspace`.
+Managed links for SSH, Git, Zsh, OMC, and other contracted home paths point into the selected generation. Unsafe files or links at managed paths fail closed rather than being overwritten. Repository-local OMC and OMX state remains in `/workspace`. `/home/dev` is ephemeral except for managed routes.
 
 `/config` itself is a root-owned control plane. The active-generation pointer, identity record, locks, and operation journals are root-managed; `dev` receives write access only to explicit runtime children such as generations and event outboxes. This prevents normal workloads from bypassing the offline migration workflow while keeping their tool state persistent.
 

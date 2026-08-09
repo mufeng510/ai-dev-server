@@ -1,5 +1,6 @@
 # home-relative path	generation-relative target
 .config/claude-omc	omc
+.config/gh	gh
 .ssh	ssh
 .config/git	git
 .config/zsh	zsh

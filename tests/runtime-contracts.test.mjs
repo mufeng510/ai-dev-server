@@ -83,8 +83,10 @@ test("generation resolver fails closed and exports every tool state root", () =>
     "CLAUDE_CONFIG_DIR=",
     "CODEX_HOME=",
     "OMC_STATE_DIR=",
-    "CC_SWITCH_CONFIG_DIR="
+    "CC_SWITCH_CONFIG_DIR=",
+    "GH_CONFIG_DIR="
   ]);
+  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh/);
 });
 
 test("supported shell and exec paths always route through ai-dev-run", () => {
@@ -208,7 +210,10 @@ test("readiness and doctor validate active cc-switch state and report auth only"
   assert.match(probes, /cc-switch config validate/);
   assert.match(probes, /claude auth status --json/);
   assert.match(probes, /codex login status/);
-  assert.doesNotMatch(probes, /claude\s+(?:auth\s+)?login|codex\s+login(?!\s+status)|cc-switch\s+auth\s+login/im);
+  assert.match(probes, /gh auth status/);
+  assert.match(probes, /gh-auth=/);
+  assert.match(probes, /GH_CONFIG_DIR/);
+  assert.doesNotMatch(probes, /claude\s+(?:auth\s+)?login|codex\s+login(?!\s+status)|cc-switch\s+auth\s+login|gh\s+auth\s+login/im);
 });
 
 test("migration and rollback preserve a single atomic generation pointer commit", () => {
@@ -226,7 +231,7 @@ test("migration and rollback preserve a single atomic generation pointer commit"
   assert.match(rollback, /recovery\.started/);
   assert.match(rollback, /recovery\.completed/);
   assert.match(runtime, /ai_dev_probe_generation_tools/);
-  for (const tool of ["claude", "codex", "omc", "omx", "cc-switch", "git", "ssh", "zsh"]) {
+  for (const tool of ["claude", "codex", "omc", "omx", "cc-switch", "gh", "git", "ssh", "zsh"]) {
     assert.match(runtime, new RegExp(`${tool}.*--version|${tool} config validate`));
   }
   assert.match(migration, /ai_dev_probe_generation_tools/);
@@ -314,14 +319,14 @@ test("generation resolution works against an isolated offline config root", { sk
       `AI_DEV_CONFIG_ROOT=${JSON.stringify(configRoot)}`,
       `. ${JSON.stringify(runtimePath)}`,
       "ai_dev_export_generation",
-      "printf '%s\\n' \"$CLAUDE_CONFIG_DIR\" \"$CODEX_HOME\" \"$OMC_STATE_DIR\" \"$CC_SWITCH_CONFIG_DIR\""
+      "printf '%s\\n' \"$CLAUDE_CONFIG_DIR\" \"$CODEX_HOME\" \"$OMC_STATE_DIR\" \"$CC_SWITCH_CONFIG_DIR\" \"$GH_CONFIG_DIR\""
     ].join("; ");
     const result = spawnSync("bash", ["-c", command], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     const portable = (value) => value.replaceAll("\\", "/");
     assert.deepEqual(
       result.stdout.trim().split("\n").map(portable),
-      ["claude", "codex", "omc", "cc-switch"].map((name) => portable(path.join(generation, name)))
+      ["claude", "codex", "omc", "cc-switch", "gh"].map((name) => portable(path.join(generation, name)))
     );
 
     fs.rmSync(path.join(configRoot, "active-generation"));
