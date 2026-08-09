@@ -1,6 +1,6 @@
 # ai-dev
 
-`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes Docker CLI/Compose/Buildx, GitHub CLI, common language toolchains, Claude Code, Codex CLI, Oh My ClaudeCode (OMC), Oh My Codex (OMX), and SaladDay `cc-switch-cli`. Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
+`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx), [GitHub CLI](https://github.com/cli/cli), common language toolchains, [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) (OMX), and SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli). Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
 
 [简体中文](README.zh-CN.md)
 
@@ -46,18 +46,18 @@ The image is built from a digest-pinned Ubuntu 24.04 base, supports amd64 and ar
 
 | Category | Software | Version / notes |
 | --- | --- | --- |
-| Container development | Docker CLI, Compose v2, Buildx | Installed from Docker's Ubuntu repository and used through the mounted host Docker Socket |
-| JavaScript / TypeScript | Node.js, pnpm, Bun | 24.4.1, 10.13.1, 1.2.19 |
-| Python | Python 3, pip, venv, uv | Ubuntu 24.04 system Python; uv 0.8.3 |
-| Go | Go | 1.24.5 |
-| Rust | rustc, cargo, rustup | 1.88.0, minimal profile |
-| Java | OpenJDK headless | 21 |
-| GitHub | GitHub CLI (`gh`) | 2.97.0 |
-| AI tools | Claude Code, Codex CLI | 2.1.221, 0.146.0 |
-| AI orchestration | Oh My ClaudeCode, Oh My Codex | 4.15.7, 0.20.3 |
-| Claude provider tool | SaladDay `cc-switch-cli` | 5.9.3 Linux musl CLI |
-| Development tools | Git, Git LFS, OpenSSH client, tmux, Zsh, Bash, GCC, Clang, CMake, make, pkg-config | Installed from Ubuntu repositories |
-| Command-line tools | `curl`, `wget`, `jq`, `yq` 4.47.1, `rg`, `fd`, `fzf`, `sqlite3`, ShellCheck | `fd` is a compatibility alias for `fdfind` |
+| Container development | [Docker CLI](https://github.com/docker/cli), [Compose v2](https://github.com/docker/compose), [Buildx](https://github.com/docker/buildx) | Installed from Docker's Ubuntu repository and used through the mounted host Docker Socket |
+| JavaScript / TypeScript | [Node.js](https://github.com/nodejs/node), [pnpm](https://github.com/pnpm/pnpm), [Bun](https://github.com/oven-sh/bun) | 24.4.1, 10.13.1, 1.2.19 |
+| Python | [Python 3](https://github.com/python/cpython), [pip](https://github.com/pypa/pip), venv, [uv](https://github.com/astral-sh/uv) | Ubuntu 24.04 system Python; uv 0.8.3 |
+| Go | [Go](https://github.com/golang/go) | 1.24.5 |
+| Rust | [rustc](https://github.com/rust-lang/rust), [cargo](https://github.com/rust-lang/cargo), [rustup](https://github.com/rust-lang/rustup) | 1.88.0, minimal profile |
+| Java | [OpenJDK](https://github.com/openjdk/jdk) headless | 21 |
+| GitHub | [GitHub CLI](https://github.com/cli/cli) (`gh`) | 2.97.0 |
+| AI tools | [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex) | 2.1.221, 0.146.0 |
+| AI orchestration | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) | 4.15.7, 0.20.3 |
+| Claude provider tool | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3 Linux musl CLI |
+| Development tools | [Git](https://github.com/git/git), [Git LFS](https://github.com/git-lfs/git-lfs), [OpenSSH client](https://github.com/openssh/openssh-portable), [tmux](https://github.com/tmux/tmux), [Zsh](https://github.com/zsh-users/zsh), [Bash](https://github.com/bminor/bash), [GCC](https://github.com/gcc-mirror/gcc), [Clang](https://github.com/llvm/llvm-project), [CMake](https://github.com/Kitware/CMake), [make](https://github.com/mirror/make), [pkg-config](https://github.com/pkgconf/pkgconf) | Installed from Ubuntu repositories |
+| Command-line tools | [`curl`](https://github.com/curl/curl), [`wget`](https://www.gnu.org/software/wget/), [`jq`](https://github.com/jqlang/jq), [`yq`](https://github.com/mikefarah/yq) 4.47.1, [`rg`](https://github.com/BurntSushi/ripgrep), [`fd`](https://github.com/sharkdp/fd), [`fzf`](https://github.com/junegunn/fzf), [`sqlite3`](https://github.com/sqlite/sqlite), [ShellCheck](https://github.com/koalaman/shellcheck) | `fd` is a compatibility alias for `fdfind` |
 
 The AI CLI support baseline includes Node.js 24 (the OMC and OMX runtime), Python 3 plus a native build toolchain and SQLite (native Node module fallback), and Git, `rg`, `jq`, `tmux`, `curl`, and `tar` for the supported CLI workflows. Runtime self-updates are disabled. Caches live under `/data/cache`, while configuration, credentials, and projects are persisted through the named volumes below. Check a running image with `scripts/exec <command> --version`.
 

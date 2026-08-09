@@ -2,6 +2,7 @@ name: ai-dev
 
 services:
   ai-dev:
+    container_name: ai-dev
     # Override to pin a release, use a registry mirror, or test a local image.
     image: ${AI_DEV_IMAGE:-docker.io/jerry0510/ai-dev:latest}
     # Start after Docker daemon restarts, except when explicitly stopped by the operator.

@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 Docker CLI/Compose/Buildx、GitHub CLI、常用语言工具链、Claude Code、Codex CLI、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）及 SaladDay `cc-switch-cli`。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
+`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）及 SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
 
 ## 安全警告
 
@@ -41,18 +41,18 @@ PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
 
 | 类别 | 软件 | 版本 / 说明 |
 | --- | --- | --- |
-| 容器开发 | Docker CLI、Compose v2、Buildx | 由 Docker 官方 Ubuntu 软件源安装，用于连接已挂载的宿主机 Docker Socket |
-| JavaScript / TypeScript | Node.js、pnpm、Bun | 24.4.1、10.13.1、1.2.19 |
-| Python | Python 3、pip、venv、uv | Ubuntu 24.04 系统 Python；uv 0.8.3 |
-| Go | Go | 1.24.5 |
-| Rust | rustc、cargo、rustup | 1.88.0，minimal profile |
-| Java | OpenJDK headless | 21 |
-| GitHub | GitHub CLI（`gh`） | 2.97.0 |
-| AI 工具 | Claude Code、Codex CLI | 2.1.221、0.146.0 |
-| AI 编排 | Oh My ClaudeCode、Oh My Codex | 4.15.7、0.20.3 |
-| Claude 提供方工具 | SaladDay `cc-switch-cli` | 5.9.3（Linux musl CLI） |
-| 常用开发工具 | Git、Git LFS、OpenSSH client、tmux、Zsh、Bash、GCC、Clang、CMake、make、pkg-config | 来自 Ubuntu 软件源 |
-| 常用命令行工具 | `curl`、`wget`、`jq`、`yq` 4.47.1、`rg`、`fd`、`fzf`、`sqlite3`、ShellCheck | `fd` 是 `fdfind` 的兼容别名 |
+| 容器开发 | [Docker CLI](https://github.com/docker/cli)、[Compose v2](https://github.com/docker/compose)、[Buildx](https://github.com/docker/buildx) | 由 Docker 官方 Ubuntu 软件源安装，用于连接已挂载的宿主机 Docker Socket |
+| JavaScript / TypeScript | [Node.js](https://github.com/nodejs/node)、[pnpm](https://github.com/pnpm/pnpm)、[Bun](https://github.com/oven-sh/bun) | 24.4.1、10.13.1、1.2.19 |
+| Python | [Python 3](https://github.com/python/cpython)、[pip](https://github.com/pypa/pip)、venv、[uv](https://github.com/astral-sh/uv) | Ubuntu 24.04 系统 Python；uv 0.8.3 |
+| Go | [Go](https://github.com/golang/go) | 1.24.5 |
+| Rust | [rustc](https://github.com/rust-lang/rust)、[cargo](https://github.com/rust-lang/cargo)、[rustup](https://github.com/rust-lang/rustup) | 1.88.0，minimal profile |
+| Java | [OpenJDK](https://github.com/openjdk/jdk) headless | 21 |
+| GitHub | [GitHub CLI](https://github.com/cli/cli)（`gh`） | 2.97.0 |
+| AI 工具 | [Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex) | 2.1.221、0.146.0 |
+| AI 编排 | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) | 4.15.7、0.20.3 |
+| Claude 提供方工具 | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3（Linux musl CLI） |
+| 常用开发工具 | [Git](https://github.com/git/git)、[Git LFS](https://github.com/git-lfs/git-lfs)、[OpenSSH client](https://github.com/openssh/openssh-portable)、[tmux](https://github.com/tmux/tmux)、[Zsh](https://github.com/zsh-users/zsh)、[Bash](https://github.com/bminor/bash)、[GCC](https://github.com/gcc-mirror/gcc)、[Clang](https://github.com/llvm/llvm-project)、[CMake](https://github.com/Kitware/CMake)、[make](https://github.com/mirror/make)、[pkg-config](https://github.com/pkgconf/pkgconf) | 来自 Ubuntu 软件源 |
+| 常用命令行工具 | [`curl`](https://github.com/curl/curl)、[`wget`](https://www.gnu.org/software/wget/)、[`jq`](https://github.com/jqlang/jq)、[`yq`](https://github.com/mikefarah/yq) 4.47.1、[`rg`](https://github.com/BurntSushi/ripgrep)、[`fd`](https://github.com/sharkdp/fd)、[`fzf`](https://github.com/junegunn/fzf)、[`sqlite3`](https://github.com/sqlite/sqlite)、[ShellCheck](https://github.com/koalaman/shellcheck) | `fd` 是 `fdfind` 的兼容别名 |
 
 AI CLI 运行环境包括 Node.js 24（OMC 和 OMX 的运行时）、Python 3、原生编译工具链和 SQLite（原生 Node 模块的回退编译），以及受支持 CLI 工作流所需的 Git、`rg`、`jq`、`tmux`、`curl` 和 `tar`。镜像已禁用工具自更新；缓存存放在 `/data/cache`，配置、凭据和项目数据由下方的命名卷持久化。可在运行中的容器中使用 `scripts/exec <command> --version` 查看实际安装版本。
 
