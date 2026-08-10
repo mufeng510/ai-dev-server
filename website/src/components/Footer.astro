@@ -1,5 +1,23 @@
 ---
 import { siteConfig } from "../config/site";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+import { localePath } from "../i18n/utils";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const product = [
+  { label: t(locale, "footer.features"), href: localePath(locale, "/#features") },
+  { label: t(locale, "footer.docs"), href: localePath(locale, "/docs") },
+  { label: t(locale, "footer.github"), href: siteConfig.github, external: true },
+];
+const resources = [
+  { label: t(locale, "footer.installation"), href: localePath(locale, "/docs/installation") },
+  { label: t(locale, "footer.configuration"), href: localePath(locale, "/docs/configuration") },
+  { label: t(locale, "footer.security"), href: localePath(locale, "/docs/security") },
+  { label: t(locale, "footer.faq"), href: localePath(locale, "/docs/faq") },
+  { label: t(locale, "footer.contributing"), href: `${siteConfig.github}/blob/main/CONTRIBUTING.md`, external: true },
+];
 ---
 
 <footer class="mt-20 border-t border-[var(--color-border)]">
@@ -9,15 +27,13 @@ import { siteConfig } from "../config/site";
         <img src="/logo.svg" width="24" height="24" alt="" />
         {siteConfig.name}
       </div>
-      <p class="mt-3 text-sm text-[var(--color-muted)]">
-        Open source AI development environment. Self-hosted, Docker-native, terminal-first.
-      </p>
-      <p class="mt-3 text-xs text-[var(--color-muted)]">License: {siteConfig.license}</p>
+      <p class="mt-3 text-sm text-[var(--color-muted)]">{t(locale, "footer.blurb")}</p>
+      <p class="mt-3 text-xs text-[var(--color-muted)]">{t(locale, "footer.license")}: {siteConfig.license}</p>
     </div>
     <div>
-      <h2 class="text-sm font-semibold">Product</h2>
+      <h2 class="text-sm font-semibold">{t(locale, "footer.product")}</h2>
       <ul class="mt-3 space-y-2 p-0 list-none">
-        {siteConfig.footer.product.map((item) => (
+        {product.map((item) => (
           <li>
             <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={item.href} {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{item.label}</a>
           </li>
@@ -25,9 +41,9 @@ import { siteConfig } from "../config/site";
       </ul>
     </div>
     <div>
-      <h2 class="text-sm font-semibold">Resources</h2>
+      <h2 class="text-sm font-semibold">{t(locale, "footer.resources")}</h2>
       <ul class="mt-3 space-y-2 p-0 list-none">
-        {siteConfig.footer.resources.map((item) => (
+        {resources.map((item) => (
           <li>
             <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={item.href} {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{item.label}</a>
           </li>
@@ -35,20 +51,18 @@ import { siteConfig } from "../config/site";
       </ul>
     </div>
     <div>
-      <h2 class="text-sm font-semibold">Community</h2>
+      <h2 class="text-sm font-semibold">{t(locale, "footer.community")}</h2>
       <ul class="mt-3 space-y-2 p-0 list-none">
-        {siteConfig.footer.community.map((item) => (
-          <li>
-            <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={item.href} target="_blank" rel="noopener noreferrer">{item.label} ↗</a>
-          </li>
-        ))}
+        <li>
+          <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={siteConfig.github} target="_blank" rel="noopener noreferrer">{t(locale, "footer.github")} ↗</a>
+        </li>
       </ul>
     </div>
   </div>
   <div class="border-t border-[var(--color-border)]">
     <div class="container-page flex flex-col gap-2 py-6 text-sm text-[var(--color-muted)] md:flex-row md:items-center md:justify-between">
       <p>© {siteConfig.copyrightYear} {siteConfig.name}</p>
-      <p>Default image: <code class="font-mono text-xs">{siteConfig.image}</code></p>
+      <p>{t(locale, "footer.image")}: <code class="font-mono text-xs">{siteConfig.image}</code></p>
     </div>
   </div>
 </footer>

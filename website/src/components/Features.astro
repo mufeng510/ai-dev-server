@@ -1,38 +1,17 @@
 ---
-const features = [
-  {
-    title: "Immutable multi-arch image",
-    body: "Ubuntu 24.04 for linux/amd64 and linux/arm64. Upgrades come from reviewed image tags — not runtime self-update.",
-  },
-  {
-    title: "AI coding CLIs ready",
-    body: "Claude Code, Codex CLI, Oh My ClaudeCode (OMC), Oh My Codex (OMX), and SaladDay cc-switch-cli are preinstalled.",
-  },
-  {
-    title: "Persistent named volumes",
-    body: "Projects, credentials, caches, logs, models, and backups live in six named volumes that survive container recreate.",
-  },
-  {
-    title: "Docker from inside",
-    body: "Docker CLI, Compose, and Buildx talk to the host docker.sock. Powerful — and intentionally trusted-single-user only.",
-  },
-  {
-    title: "Multi-language toolchains",
-    body: "Node.js, pnpm, Bun, Python/uv, Go, Rust, OpenJDK, GitHub CLI, and common developer utilities ship in the image.",
-  },
-  {
-    title: "Terminal + tmux workflow",
-    body: "Enter with scripts/shell or scripts/tmux. Keep sessions alive across host SSH disconnects without an in-container SSH daemon.",
-  },
-];
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const features = [1,2,3,4,5,6].map((n) => ({
+  title: t(locale, `features.${n}.title` as any),
+  body: t(locale, `features.${n}.body` as any),
+}));
 ---
-
 <section id="features" class="container-page py-20">
   <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Everything you need to build with AI.</h2>
-    <p class="mt-3 text-[var(--color-muted)]">
-      A serious Docker-native terminal environment for AI coding agents and everyday development work.
-    </p>
+    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{t(locale, "features.title")}</h2>
+    <p class="mt-3 text-[var(--color-muted)]">{t(locale, "features.subtitle")}</p>
   </div>
   <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {features.map((feature) => (

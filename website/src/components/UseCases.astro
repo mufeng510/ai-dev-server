@@ -1,29 +1,18 @@
 ---
-const cases = [
-  {
-    title: "Personal AI development",
-    body: "Run Claude Code, Codex, and your toolchains in one trusted container on your own machine or server.",
-  },
-  {
-    title: "Remote development",
-    body: "Connect to the Docker host from another device, then attach with scripts/shell or scripts/tmux. The container does not expose its own SSH service.",
-  },
-  {
-    title: "Homelab / NAS",
-    body: "If your NAS or homelab can run Linux Docker with a docker.sock, you can host the environment there under the same security assumptions.",
-  },
-  {
-    title: "Reproducible development",
-    body: "Pin image tags, keep state in named volumes, and recreate containers without rebuilding your personal toolchain from scratch.",
-  },
-];
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const cases = [1,2,3,4].map((n) => ({
+  title: t(locale, `use.${n}.title` as any),
+  body: t(locale, `use.${n}.body` as any),
+}));
 ---
-
 <section id="use-cases" class="border-y border-[var(--color-border)] py-20">
   <div class="container-page">
     <div class="mx-auto max-w-2xl text-center">
-      <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Where it fits</h2>
-      <p class="mt-3 text-[var(--color-muted)]">Practical deployments on hosts you already control.</p>
+      <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{t(locale, "use.title")}</h2>
+      <p class="mt-3 text-[var(--color-muted)]">{t(locale, "use.subtitle")}</p>
     </div>
     <div class="mt-10 grid gap-4 md:grid-cols-2">
       {cases.map((item) => (

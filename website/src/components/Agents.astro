@@ -1,35 +1,18 @@
 ---
-const agents = [
-  {
-    name: "Claude Code",
-    body: "Preinstalled CLI for agentic coding. Authenticate with scripts/exec claude auth login and keep state in the active config generation.",
-  },
-  {
-    name: "Codex CLI",
-    body: "Preinstalled OpenAI Codex CLI. Device auth works well on headless servers via scripts/exec codex login --device-auth.",
-  },
-  {
-    name: "Oh My ClaudeCode (OMC)",
-    body: "Pinned OMC CLI ships in the image. Project plugin setup is a per-repo Claude Code workflow under /workspace.",
-  },
-  {
-    name: "Oh My Codex (OMX)",
-    body: "User-scope OMX initialization runs offline on fresh config volumes. Project setup stays repository-local under /workspace.",
-  },
-  {
-    name: "cc-switch-cli",
-    body: "SaladDay headless TUI/scriptable CLI for Claude provider switching — not the desktop GUI of a similar name.",
-  },
-];
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const agents = [1,2,3,4,5].map((n) => ({
+  name: t(locale, `agents.${n}.name` as any),
+  body: t(locale, `agents.${n}.body` as any),
+}));
 ---
-
 <section id="agents" class="border-y border-[var(--color-border)] py-20">
   <div class="container-page">
     <div class="mx-auto max-w-2xl text-center">
-      <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Bring your favorite AI coding agents.</h2>
-      <p class="mt-3 text-[var(--color-muted)]">
-        Works with your preinstalled AI coding tools. These are packaged CLIs shipped in the image.
-      </p>
+      <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{t(locale, "agents.title")}</h2>
+      <p class="mt-3 text-[var(--color-muted)]">{t(locale, "agents.subtitle")}</p>
     </div>
     <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {agents.map((agent) => (

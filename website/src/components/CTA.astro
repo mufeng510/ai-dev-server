@@ -1,16 +1,18 @@
 ---
 import { siteConfig } from "../config/site";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+import { localePath } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
 ---
-
 <section class="container-page pb-20">
   <div class="card overflow-hidden px-6 py-12 text-center md:px-12">
-    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Ready to build with AI?</h2>
-    <p class="mx-auto mt-3 max-w-xl text-[var(--color-muted)]">
-      Set up your own self-hosted AI development environment today — no account, no subscription, just Docker on a host you trust.
-    </p>
+    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{t(locale, "cta.title")}</h2>
+    <p class="mx-auto mt-3 max-w-xl text-[var(--color-muted)]">{t(locale, "cta.subtitle")}</p>
     <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-      <a class="btn btn-primary" href="/docs">Get Started</a>
-      <a class="btn btn-secondary" href={siteConfig.github} target="_blank" rel="noopener noreferrer">Star on GitHub ↗</a>
+      <a class="btn btn-primary" href={localePath(locale, "/docs")}>{t(locale, "cta.primary")}</a>
+      <a class="btn btn-secondary" href={siteConfig.github} target="_blank" rel="noopener noreferrer">{t(locale, "cta.secondary")} ↗</a>
     </div>
   </div>
 </section>

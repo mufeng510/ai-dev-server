@@ -2,34 +2,48 @@
 import { siteConfig } from "../config/site";
 import ThemeToggle from "./ThemeToggle.astro";
 import MobileMenu from "./MobileMenu.astro";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+import { localePath } from "../i18n/utils";
+
+interface Props {
+  locale: Locale;
+  currentPath: string;
+}
+const { locale, currentPath } = Astro.props;
+const nav = [
+  { label: t(locale, "nav.features"), href: localePath(locale, "/#features") },
+  { label: t(locale, "nav.docs"), href: localePath(locale, "/docs") },
+  { label: t(locale, "nav.github"), href: siteConfig.github, external: true },
+];
 ---
 
 <header
   class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[color-mix(in_oklab,var(--color-bg)_80%,transparent)] backdrop-blur-md"
 >
   <div class="container-page flex h-16 items-center justify-between gap-4">
-    <a href="/" class="flex items-center gap-2 font-semibold tracking-tight text-[var(--color-fg)] no-underline">
+    <a href={localePath(locale, "/")} class="flex items-center gap-2 font-semibold tracking-tight text-[var(--color-fg)] no-underline">
       <img src="/logo.svg" width="28" height="28" alt="" />
       <span>{siteConfig.name}</span>
     </a>
-    <nav class="hidden items-center gap-6 md:flex" aria-label="Primary">
-      {
-        siteConfig.nav.map((item) => (
-          <a
-            href={item.href}
-            class="text-sm text-[var(--color-muted)] no-underline transition hover:text-[var(--color-fg)]"
-            {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-          >
-            {item.label}
-            {item.external ? " ↗" : ""}
-          </a>
-        ))
-      }
-      <ThemeToggle />
+    <nav class="hidden items-center gap-5 md:flex" aria-label={t(locale, "nav.primary")}>
+      {nav.map((item) => (
+        <a
+          href={item.href}
+          class="text-sm text-[var(--color-muted)] no-underline transition hover:text-[var(--color-fg)]"
+          {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        >
+          {item.label}{item.external ? " ↗" : ""}
+        </a>
+      ))}
+      <LanguageSwitcher locale={locale} currentPath={currentPath} />
+      <ThemeToggle locale={locale} />
     </nav>
     <div class="flex items-center gap-2 md:hidden">
-      <ThemeToggle />
-      <MobileMenu items={siteConfig.nav} />
+      <LanguageSwitcher locale={locale} currentPath={currentPath} />
+      <ThemeToggle locale={locale} />
+      <MobileMenu locale={locale} items={nav} />
     </div>
   </div>
 </header>

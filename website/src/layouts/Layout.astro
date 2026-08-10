@@ -2,26 +2,36 @@
 import { siteConfig } from "../config/site";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+import { defaultLocale, switchLocalePath } from "../i18n/utils";
 import "../styles/global.css";
 
 interface Props {
+  locale?: Locale;
   title?: string;
   description?: string;
   canonicalPath?: string;
 }
 
 const {
-  title = `${siteConfig.name} — ${siteConfig.tagline}`,
-  description = siteConfig.description,
+  locale = defaultLocale,
+  title = t(locale, "meta.title"),
+  description = t(locale, "meta.description"),
   canonicalPath = Astro.url.pathname,
 } = Astro.props;
 
-const canonical = new URL(canonicalPath, Astro.site ?? siteConfig.fallbackUrl).toString();
-const ogImage = new URL(siteConfig.ogImage, Astro.site ?? siteConfig.fallbackUrl).toString();
+const origin = Astro.site ?? siteConfig.fallbackUrl;
+const canonical = new URL(canonicalPath, origin).toString();
+const ogImage = new URL(siteConfig.ogImage, origin).toString();
+const enAlt = new URL(switchLocalePath(canonicalPath, "en"), origin).toString();
+const zhAlt = new URL(switchLocalePath(canonicalPath, "zh"), origin).toString();
+const htmlLang = locale === "zh" ? "zh-CN" : "en";
+const ogLocale = locale === "zh" ? "zh_CN" : "en_US";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={htmlLang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,6 +39,9 @@ const ogImage = new URL(siteConfig.ogImage, Astro.site ?? siteConfig.fallbackUrl
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={enAlt} />
+    <link rel="alternate" hreflang="zh-CN" href={zhAlt} />
+    <link rel="alternate" hreflang="x-default" href={enAlt} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -36,6 +49,8 @@ const ogImage = new URL(siteConfig.ogImage, Astro.site ?? siteConfig.fallbackUrl
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:locale" content={ogLocale} />
+    <meta property="og:locale:alternate" content={locale === "zh" ? "en_US" : "zh_CN"} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
@@ -59,12 +74,12 @@ const ogImage = new URL(siteConfig.ogImage, Astro.site ?? siteConfig.fallbackUrl
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-card)] focus:px-3 focus:py-2"
-      >Skip to content</a
+      >{t(locale, "skip")}</a
     >
-    <Header />
+    <Header locale={locale} currentPath={canonicalPath} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    <Footer locale={locale} />
   </body>
 </html>

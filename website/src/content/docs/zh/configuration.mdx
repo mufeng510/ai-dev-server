@@ -1,0 +1,45 @@
+---
+title: 配置与持久化
+description: 环境变量、配置代与工具状态持久化。
+order: 4
+---
+
+## Compose 环境变量
+
+| 变量 | 默认 | 作用 |
+| --- | --- | --- |
+| `PUID` | `1000` | 记录为持久化卷所有者的宿主机 UID |
+| `PGID` | `1000` | 宿主机 GID |
+| `TZ` | `UTC` | 容器时区 |
+| `AI_DEV_IMAGE` | `docker.io/jerry0510/ai-dev:latest` | 镜像覆盖 |
+
+首次成功启动会记录所选 UID/GID。之后变更身份需要仓库 `docs/upgrade.md` 中的离线身份迁移。
+
+## 配置代
+
+受管配置位于：
+
+```text
+/config/generations/<generation-id>
+```
+
+`/config/active-generation` 选择当前生效配置代。`ai-dev-run` 在导出工具主目录前会校验该指针，例如：
+
+- `CLAUDE_CONFIG_DIR`
+- `CODEX_HOME`
+- `OMC_STATE_DIR`
+- `CC_SWITCH_CONFIG_DIR`
+- `GH_CONFIG_DIR`
+
+## /workspace 中保留什么
+
+仓库本地的 OMC/OMX 项目状态仍在 `/workspace`。除受管路由外，`/home/dev` 是临时的。
+
+## 运维辅助
+
+```bash
+scripts/exec ai-dev readiness
+scripts/exec ai-dev doctor
+scripts/exec cc-switch config path
+scripts/exec omx doctor
+```

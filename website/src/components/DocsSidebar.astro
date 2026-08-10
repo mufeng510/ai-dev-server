@@ -1,49 +1,36 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+import { localePath } from "../i18n/utils";
+
+type DocItem = CollectionEntry<"docs"> & { localSlug: string };
 interface Props {
-  docs: CollectionEntry<"docs">[];
+  locale: Locale;
+  docs: DocItem[];
   current: string;
 }
-const { docs, current } = Astro.props;
+const { locale, docs, current } = Astro.props;
 const normalize = (path: string) => path.replace(/\/$/, "") || "/";
 ---
-
 <div class="mb-4 lg:hidden">
-  <label for="docs-nav-select" class="mb-2 block text-sm font-medium">Documentation</label>
-  <select
-    id="docs-nav-select"
-    class="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2"
-    onchange="if (this.value) window.location.href = this.value"
-  >
+  <label for="docs-nav-select" class="mb-2 block text-sm font-medium">{t(locale, "docs.nav")}</label>
+  <select id="docs-nav-select" class="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2" onchange="if (this.value) window.location.href = this.value">
     {docs.map((doc) => {
-      const href = doc.slug === "index" ? "/docs" : `/docs/${doc.slug}`;
-      return (
-        <option value={href} selected={normalize(current) === normalize(href)}>
-          {doc.data.title}
-        </option>
-      );
+      const href = localePath(locale, doc.localSlug === "index" ? "/docs" : `/docs/${doc.localSlug}`);
+      return <option value={href} selected={normalize(current) === normalize(href)}>{doc.data.title}</option>;
     })}
   </select>
 </div>
-
-<nav class="hidden lg:block" aria-label="Documentation">
-  <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Docs</p>
+<nav class="hidden lg:block" aria-label={t(locale, "docs.nav")}>
+  <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">{t(locale, "docs.heading")}</p>
   <ul class="space-y-1 p-0 list-none">
     {docs.map((doc) => {
-      const href = doc.slug === "index" ? "/docs" : `/docs/${doc.slug}`;
+      const href = localePath(locale, doc.localSlug === "index" ? "/docs" : `/docs/${doc.localSlug}`);
       const active = normalize(current) === normalize(href);
       return (
         <li>
-          <a
-            href={href}
-            class:list={[
-              "block rounded-lg px-3 py-2 text-sm no-underline",
-              active
-                ? "bg-[var(--color-surface)] font-semibold text-[var(--color-fg)]"
-                : "text-[var(--color-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-fg)]",
-            ]}
-            aria-current={active ? "page" : undefined}
-          >
+          <a href={href} class:list={["block rounded-lg px-3 py-2 text-sm no-underline", active ? "bg-[var(--color-surface)] font-semibold text-[var(--color-fg)]" : "text-[var(--color-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-fg)]"]} aria-current={active ? "page" : undefined}>
             {doc.data.title}
           </a>
         </li>

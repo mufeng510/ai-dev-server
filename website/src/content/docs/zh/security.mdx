@@ -1,0 +1,30 @@
+---
+title: 安全
+description: Docker Socket 风险、机密处理与可信单用户部署假设。
+order: 6
+---
+
+## Docker Socket 风险
+
+服务以读写方式挂载 `/var/run/docker.sock`。Docker Socket 访问权限**等同于宿主机 root**。被攻陷的 AI 工具、依赖、shell 命令或不可信仓库可以让 Docker 启动特权容器、挂载宿主机路径或修改其他负载。
+
+以 `dev` 用户运行、不启用 Compose `privileged`、不授予无关能力，只能降低容器本地误操作风险，**不能隔离 Docker Socket 访问**。
+
+仅部署在**可信单用户**主机上，并在用 AI 工具打开仓库前先审阅。
+
+## 机密
+
+公开镜像不包含用户凭据。认证为手动操作，并按配置代持久化在 `/config`。敏感状态包括 Claude/Codex 认证、SSH 私钥、OMC/OMX 配置、cc-switch 提供方材料等。
+
+切勿提交机密、写入 Compose、作为构建参数传递，或在 issue 中贴出原始配置。
+
+## 运维控制
+
+- 生产类部署优先使用不可变版本标签或摘要
+- 镜像/配置/身份迁移前备份全部六个卷
+- 迁移、回滚、恢复与身份变更期间保持服务停止
+- 保护 Docker 主机与卷存储访问
+
+## 恢复接口
+
+日常工作必须使用 `scripts/shell` 或 `scripts/exec`。`docker compose exec ai-dev sh` 会继承 root，仅用于恢复。

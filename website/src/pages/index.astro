@@ -9,21 +9,18 @@ import QuickStart from "../components/QuickStart.astro";
 import UseCases from "../components/UseCases.astro";
 import FAQ from "../components/FAQ.astro";
 import CTA from "../components/CTA.astro";
-import { siteConfig } from "../config/site";
----
+import { t } from "../i18n/ui";
 
-<Layout
-  title={`${siteConfig.name} — Your AI Development Environment, Anywhere`}
-  description={siteConfig.description}
-  canonicalPath="/"
->
-  <Hero />
-  <Features />
-  <ProductShowcase />
-  <HowItWorks />
-  <Agents />
-  <QuickStart />
-  <UseCases />
-  <FAQ />
-  <CTA />
+const locale = "en" as const;
+---
+<Layout locale={locale} title={t(locale, "meta.title")} description={t(locale, "meta.description")} canonicalPath="/">
+  <Hero locale={locale} />
+  <Features locale={locale} />
+  <ProductShowcase locale={locale} />
+  <HowItWorks locale={locale} />
+  <Agents locale={locale} />
+  <QuickStart locale={locale} />
+  <UseCases locale={locale} />
+  <FAQ locale={locale} />
+  <CTA locale={locale} />
 </Layout>

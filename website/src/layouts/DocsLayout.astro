@@ -2,23 +2,32 @@
 import { getCollection } from "astro:content";
 import Layout from "./Layout.astro";
 import DocsSidebar from "../components/DocsSidebar.astro";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
 import { siteConfig } from "../config/site";
 
 interface Props {
+  locale: Locale;
   title: string;
   description: string;
 }
-
-const { title, description } = Astro.props;
-const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
-const pageTitle = `${title} — ${siteConfig.name} Docs`;
+const { locale, title, description } = Astro.props;
+const all = await getCollection("docs");
+const prefix = `${locale}/`;
+const docs = all
+  .filter((d) => d.slug === locale || d.slug.startsWith(prefix) || d.id.startsWith(prefix) || d.id.startsWith(`${locale}/`))
+  .map((d) => {
+    const raw = d.slug.includes("/") ? d.slug.split("/").slice(1).join("/") : d.slug === locale ? "index" : d.slug;
+    return { ...d, localSlug: raw === "" ? "index" : raw };
+  })
+  .sort((a, b) => a.data.order - b.data.order);
+const pageTitle = `${title} — ${siteConfig.name} ${t(locale, "docs.heading")}`;
 ---
-
-<Layout title={pageTitle} description={description}>
+<Layout locale={locale} title={pageTitle} description={description} canonicalPath={Astro.url.pathname}>
   <div class="container-page py-10 md:py-14">
     <div class="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside class="lg:sticky lg:top-24 lg:self-start">
-        <DocsSidebar docs={docs} current={Astro.url.pathname} />
+        <DocsSidebar locale={locale} docs={docs} current={Astro.url.pathname} />
       </aside>
       <article class="prose-docs card p-6 md:p-8">
         <slot />

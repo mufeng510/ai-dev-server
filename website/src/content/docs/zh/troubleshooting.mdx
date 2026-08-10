@@ -1,0 +1,37 @@
+---
+title: 故障排查
+description: AI Dev Server 常见失败模式与恢复指引。
+order: 8
+---
+
+## 健康检查未就绪
+
+检查：
+
+```bash
+docker compose ps
+scripts/exec ai-dev readiness
+scripts/exec ai-dev doctor
+```
+
+## 登录没有打开浏览器
+
+服务是无头的。请使用 Claude Code 打印的 URL/代码。Codex 使用设备流：
+
+```bash
+scripts/exec codex login --device-auth
+```
+
+认证有意不纳入健康检查。
+
+## shell 或命令以 root 运行
+
+请使用 `scripts/shell` 与 `scripts/exec`。除非强制 `dev`，Docker exec 默认是镜像 root 用户。
+
+## 受管路由不安全
+
+启动只会替换其拥有的已注册链接。受管路径上的普通文件、外部符号链接或指向未注册配置代的链接会关闭失败。
+
+## tmux 会话消失
+
+tmux 会话状态在容器进程中。`docker compose restart` 或重建容器会结束会话；命名卷中的工具配置会单独保留。

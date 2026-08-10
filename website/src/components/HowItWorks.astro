@@ -1,31 +1,19 @@
 ---
 import CodeBlock from "./CodeBlock.astro";
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
 const steps = [
-  {
-    n: "01",
-    title: "Start",
-    body: "On a Linux Docker host with Engine, Compose v2, and a working docker.sock:",
-    code: "docker compose up -d",
-  },
-  {
-    n: "02",
-    title: "Enter",
-    body: "Open the supported Zsh session as dev (not a web app URL, not SSH into the container):",
-    code: "scripts/shell\n# or durable sessions:\nscripts/tmux",
-  },
-  {
-    n: "03",
-    title: "Build",
-    body: "Authenticate tools as needed, then develop under /workspace with your AI coding agents.",
-    code: "scripts/exec claude auth login\nscripts/exec codex login --device-auth",
-  },
+  { n: "01", title: t(locale, "how.1.title"), body: t(locale, "how.1.body"), code: "docker compose up -d" },
+  { n: "02", title: t(locale, "how.2.title"), body: t(locale, "how.2.body"), code: t(locale, "how.2.code") },
+  { n: "03", title: t(locale, "how.3.title"), body: t(locale, "how.3.body"), code: t(locale, "how.3.code") },
 ];
 ---
-
 <section id="how-it-works" class="container-page py-20">
   <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">How it works</h2>
-    <p class="mt-3 text-[var(--color-muted)]">Three steps from a trusted Docker host to a ready AI development shell.</p>
+    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{t(locale, "how.title")}</h2>
+    <p class="mt-3 text-[var(--color-muted)]">{t(locale, "how.subtitle")}</p>
   </div>
   <div class="mt-10 grid gap-6 lg:grid-cols-3">
     {steps.map((step) => (
@@ -33,9 +21,7 @@ const steps = [
         <p class="font-mono text-sm text-[var(--color-accent)]">{step.n}</p>
         <h3 class="mt-2 text-xl font-semibold">{step.title}</h3>
         <p class="mt-2 text-sm text-[var(--color-muted)]">{step.body}</p>
-        <div class="mt-4">
-          <CodeBlock code={step.code} />
-        </div>
+        <div class="mt-4"><CodeBlock code={step.code} locale={locale} /></div>
       </article>
     ))}
   </div>

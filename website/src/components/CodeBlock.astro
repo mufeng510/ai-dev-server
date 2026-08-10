@@ -1,41 +1,31 @@
 ---
-interface Props {
-  code: string;
-  language?: string;
-}
-const { code, language = "bash" } = Astro.props;
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+import { defaultLocale } from "../i18n/utils";
+interface Props { code: string; language?: string; locale?: Locale }
+const { code, language = "bash", locale = defaultLocale } = Astro.props;
 ---
-
-<div class="code-block relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-code)]" data-code-block>
+<div class="code-block relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-code)]" data-code-block data-copy-label={t(locale, "copy")} data-copied-label={t(locale, "copied")}>
   <div class="flex items-center justify-between border-b border-[var(--color-border)] px-3 py-2 text-xs text-slate-300">
     <span class="font-mono uppercase tracking-wide opacity-80">{language}</span>
-    <button
-      type="button"
-      class="rounded-md border border-slate-600 px-2 py-1 text-slate-100 hover:bg-slate-800"
-      data-copy-button
-      aria-label="Copy code"
-    >Copy</button>
+    <button type="button" class="rounded-md border border-slate-600 px-2 py-1 text-slate-100 hover:bg-slate-800" data-copy-button aria-label={t(locale, "copy")}>{t(locale, "copy")}</button>
   </div>
   <pre class="m-0 overflow-x-auto p-4 text-sm leading-6 text-slate-100"><code data-code-content>{code}</code></pre>
 </div>
-
 <script>
   document.querySelectorAll("[data-code-block]").forEach((block) => {
     const button = block.querySelector("[data-copy-button]") as HTMLButtonElement | null;
     const content = block.querySelector("[data-code-content]") as HTMLElement | null;
     if (!button || !content) return;
+    const copyLabel = (block as HTMLElement).dataset.copyLabel || "Copy";
+    const copiedLabel = (block as HTMLElement).dataset.copiedLabel || "Copied";
     button.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(content.textContent || "");
-        button.textContent = "Copied";
-        button.setAttribute("aria-label", "Copied");
-        setTimeout(() => {
-          button.textContent = "Copy";
-          button.setAttribute("aria-label", "Copy code");
-        }, 1600);
-      } catch {
-        button.textContent = "Failed";
-      }
+        button.textContent = copiedLabel;
+        button.setAttribute("aria-label", copiedLabel);
+        setTimeout(() => { button.textContent = copyLabel; button.setAttribute("aria-label", copyLabel); }, 1600);
+      } catch { button.textContent = "Failed"; }
     });
   });
 </script>

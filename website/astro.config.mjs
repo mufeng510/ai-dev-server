@@ -10,6 +10,13 @@ export default defineConfig({
   site,
   output: "static",
   integrations: [mdx(), sitemap()],
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "zh"],
+    routing: {
+      prefixDefaultLocale: false,
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
   },

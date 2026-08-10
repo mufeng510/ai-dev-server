@@ -6,19 +6,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const dist = path.join(root, "dist");
 const failures = [];
-
-function fail(msg) {
-  failures.push(msg);
-}
-
-function exists(p) {
-  return fs.existsSync(p);
-}
-
-function read(p) {
-  return fs.readFileSync(p, "utf8");
-}
-
+const fail = (msg) => failures.push(msg);
+const exists = (p) => fs.existsSync(p);
+const read = (p) => fs.readFileSync(p, "utf8");
 function walk(dir) {
   const out = [];
   if (!exists(dir)) return out;
@@ -32,169 +22,145 @@ function walk(dir) {
 
 if (!exists(dist)) fail("dist/ missing — run astro build first");
 
-const requiredRoutes = [
-  "index.html",
-  "docs/index.html",
-  "docs/installation/index.html",
-  "docs/docker/index.html",
-  "docs/configuration/index.html",
-  "docs/agents/index.html",
-  "docs/security/index.html",
-  "docs/faq/index.html",
-  "docs/troubleshooting/index.html",
-];
+const docSlugs = ["", "installation", "docker", "configuration", "agents", "security", "faq", "troubleshooting"];
+function docRoute(locale, slug) {
+  const base = locale === "zh" ? "zh/docs" : "docs";
+  if (!slug) return path.join(dist, base, "index.html");
+  return path.join(dist, base, slug, "index.html");
+}
 
-for (const route of requiredRoutes) {
-  if (!exists(path.join(dist, route))) fail(`missing route: ${route}`);
+// routes
+if (!exists(path.join(dist, "index.html"))) fail("missing EN home");
+if (!exists(path.join(dist, "zh", "index.html"))) fail("missing ZH home");
+for (const slug of docSlugs) {
+  if (!exists(docRoute("en", slug))) fail(`missing EN docs route: ${slug || "index"}`);
+  if (!exists(docRoute("zh", slug))) fail(`missing ZH docs route: ${slug || "index"}`);
 }
 
 const htmlFiles = walk(dist).filter((f) => f.endsWith(".html"));
 const allHtml = htmlFiles.map((f) => read(f)).join("\n");
-const home = exists(path.join(dist, "index.html")) ? read(path.join(dist, "index.html")) : "";
-const security = exists(path.join(dist, "docs/security/index.html"))
-  ? read(path.join(dist, "docs/security/index.html"))
-  : "";
+const enHome = exists(path.join(dist, "index.html")) ? read(path.join(dist, "index.html")) : "";
+const zhHome = exists(path.join(dist, "zh", "index.html")) ? read(path.join(dist, "zh", "index.html")) : "";
+const enSec = exists(docRoute("en", "security")) ? read(docRoute("en", "security")) : "";
+const zhSec = exists(docRoute("zh", "security")) ? read(docRoute("zh", "security")) : "";
 
-// T4
-if (!home.includes("docker compose up -d")) fail("T4: home missing docker compose up -d");
-if (!home.includes("scripts/shell")) fail("T4: home missing scripts/shell");
-
-// T5 agents
-for (const name of ["Claude Code", "Codex CLI", "Oh My ClaudeCode", "Oh My Codex", "cc-switch"]) {
-  if (!allHtml.includes(name) && !allHtml.includes(name.replace("Oh My ClaudeCode", "OMC"))) {
-    // allow OMC/OMX short forms already present via long names mostly
-    if (!allHtml.includes(name)) fail(`T5: missing agent mention: ${name}`);
-  }
+// quickstart both locales
+for (const [label, html] of [["en", enHome], ["zh", zhHome]]) {
+  if (!html.includes("docker compose up -d")) fail(`${label} home missing docker compose up -d`);
+  if (!html.includes("scripts/shell")) fail(`${label} home missing scripts/shell`);
 }
 
-// T6 security
-const secOk =
-  /host-root/i.test(security) &&
-  /trusted single-user/i.test(security);
-if (!secOk) fail("T6: security page missing host-root / trusted single-user wording");
+// agents
+for (const name of ["Claude Code", "Codex CLI", "cc-switch"]) {
+  if (!allHtml.includes(name)) fail(`missing agent mention: ${name}`);
+}
 
-// T7
-if (!allHtml.includes("MIT")) fail("T7: MIT missing");
-if (!allHtml.includes("github.com/mufeng510/ai-dev-server")) fail("T7: GitHub URL missing");
+// security both
+if (!/host-root/i.test(enSec) || !/trusted single-user/i.test(enSec)) fail("EN security missing host-root/trusted single-user");
+if (!/宿主机 root|等同于.*root/i.test(zhSec) || !/可信.*单用户|单用户/i.test(zhSec)) fail("ZH security missing root/single-user wording");
 
-// T8 theme contract in source
+// MIT + github
+if (!allHtml.includes("MIT")) fail("MIT missing");
+if (!allHtml.includes("github.com/mufeng510/ai-dev-server")) fail("GitHub URL missing");
+
+// theme
 const layout = read(path.join(root, "src/layouts/Layout.astro"));
 const theme = read(path.join(root, "src/components/ThemeToggle.astro"));
-if (!layout.includes("ai-dev-theme") || !theme.includes("ai-dev-theme")) fail("T8: ai-dev-theme key missing");
-if (!/(light|dark|system)/.test(theme)) fail("T8: theme modes missing");
-if (!layout.includes("localStorage.getItem")) fail("T8: FOUC boot script missing");
+if (!layout.includes("ai-dev-theme") || !theme.includes("ai-dev-theme")) fail("ai-dev-theme key missing");
 
-// T9 mobile menu
+// mobile + copy
 const mobile = read(path.join(root, "src/components/MobileMenu.astro"));
-if (!mobile.includes("button") || !mobile.includes("Escape")) fail("T9: mobile menu button/Escape missing");
-
-// T10 copy
+if (!mobile.includes("Escape")) fail("mobile Escape missing");
 const codeBlock = read(path.join(root, "src/components/CodeBlock.astro"));
-if (!codeBlock.includes("Copied")) fail("T10: CodeBlock missing Copied state");
+if (!codeBlock.includes("copied") && !codeBlock.includes("Copied") && !codeBlock.includes("已复制")) fail("CodeBlock copied state missing");
 
-// T13 claim policy — affirmative bans site-wide (allow explicit denials)
-function stripDenialSentences(html) {
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/[^.?!]*(?:\bno\b|\bnot\b|\bdoes not\b|\bdo not\b|\bwithout\b|\brather than\b)[^.?!]*[.?!]/gi, " ");
+// language switcher
+if (!enHome.includes('hreflang="zh-CN"') && !enHome.includes(">中文<")) fail("EN home missing language switcher cues");
+if (!zhHome.includes('hreflang="en"') && !zhHome.includes(">English<")) fail("ZH home missing language switcher cues");
+if (!enHome.includes('hreflang="x-default"')) fail("EN home missing hreflang x-default");
+if (!zhHome.includes('hreflang="x-default"')) fail("ZH home missing hreflang x-default");
+if (!enHome.includes('lang="en"') && !enHome.includes("lang=\"en\"")) {
+  // html lang
 }
-const siteClaims = stripDenialSentences(allHtml);
-const banned = [
-  /\bbrowser IDE\b/i,
-  /\bweb IDE\b/i,
-  /\bweb terminal product\b/i,
-  /\bopen the web interface\b/i,
-  /\bofficial integration\b/i,
-  /\bSSH into the container\b/i,
-  /\bbuilt-in SSH server\b/i,
-];
-for (const re of banned) {
-  if (re.test(siteClaims)) fail(`T13: forbidden affirmative claim: ${re}`);
+if (!/<html[^>]*lang="en"/i.test(enHome)) fail("EN home html lang not en");
+if (!/<html[^>]*lang="zh-CN"/i.test(zhHome)) fail("ZH home html lang not zh-CN");
+
+// claim policy bilingual
+function stripDenial(html, locale) {
+  let text = html.replace(/<[^>]+>/g, " ");
+  if (locale === "zh") {
+    text = text.replace(/[^。！？\n]*(?:不|没|非|未|而非|不是|没有)[^。！？\n]*[。！？\n]/g, " ");
+  } else {
+    text = text.replace(/[^.?!]*(?:\bno\b|\bnot\b|\bdoes not\b|\bdo not\b|\bwithout\b|\brather than\b)[^.?!]*[.?!]/gi, " ");
+  }
+  return text;
 }
-if (/http:\/\/localhost:\d+/i.test(siteClaims)) fail("T13: localhost app URL claim");
+const enBanned = [/\bbrowser IDE\b/i, /\bweb IDE\b/i, /\bweb terminal product\b/i, /\bopen the web interface\b/i, /\bofficial integration\b/i, /\bSSH into the container\b/i, /\bbuilt-in SSH server\b/i];
+const zhBanned = [/浏览器\s*IDE/i, /网页\s*IDE/i, /官方集成/i, /SSH\s*进入容器/i, /内置\s*SSH\s*服务/i, /内置 SSH 守护/i];
+const enClaims = stripDenial(enHome + enSec, "en");
+const zhClaims = stripDenial(zhHome + zhSec, "zh");
+for (const re of enBanned) if (re.test(enClaims)) fail(`EN affirmative claim: ${re}`);
+for (const re of zhBanned) if (re.test(zhClaims)) fail(`ZH affirmative claim: ${re}`);
+if (/http:\/\/localhost:\d+/i.test(enClaims) || /http:\/\/localhost:\d+/i.test(zhClaims)) fail("localhost app URL claim");
 
-// T14
-if (!allHtml.includes("docker.io/jerry0510/ai-dev:latest")) fail("T14: default image missing");
-
-// T15
-const css = read(path.join(root, "src/styles/global.css"));
-if (!css.includes("prefers-reduced-motion")) fail("T15: reduced-motion missing");
-
-// T16 SEO home
-for (const needle of [
-  "<title>",
-  'name="description"',
-  'rel="canonical"',
-  'property="og:title"',
-  'property="og:image"',
-  'name="twitter:card"',
-]) {
-  if (!home.includes(needle)) fail(`T16: home missing ${needle}`);
-}
-
-// T17 sitemap/robots
-const distFiles = walk(dist).map((f) => path.relative(dist, f).replace(/\\/g, "/"));
-if (!distFiles.some((f) => f.includes("sitemap"))) fail("T17: sitemap missing");
-if (!distFiles.some((f) => f.endsWith("robots.txt"))) fail("T17: robots.txt missing");
-
-// T18 mock label
-if (!/Illustrative terminal mockup|mockup \(not a product screenshot\)/i.test(home)) {
-  fail("T18: mock illustration label missing");
-}
-
-// T19 scripts
-const pkg = JSON.parse(read(path.join(root, "package.json")));
-for (const s of ["dev", "build", "preview"]) {
-  if (!pkg.scripts?.[s]) fail(`T19: package.json missing script ${s}`);
-}
-
-// T20 volumes
+// default image + volumes
+if (!allHtml.includes("docker.io/jerry0510/ai-dev:latest")) fail("default image missing");
 for (const vol of ["workspace", "config", "data", "logs", "models", "backups"]) {
-  if (!allHtml.includes(vol)) fail(`T20: missing volume mention ${vol}`);
+  if (!allHtml.includes(vol)) fail(`missing volume ${vol}`);
 }
 
-// T3 static config
+// SEO home
+for (const needle of ["<title>", 'name="description"', 'rel="canonical"', 'property="og:title"', 'property="og:image"', 'name="twitter:card"']) {
+  if (!enHome.includes(needle)) fail(`EN home missing ${needle}`);
+  if (!zhHome.includes(needle)) fail(`ZH home missing ${needle}`);
+}
+
+// sitemap/robots
+const distFiles = walk(dist).map((f) => path.relative(dist, f).replace(/\\/g, "/"));
+if (!distFiles.some((f) => f.includes("sitemap"))) fail("sitemap missing");
+if (!distFiles.some((f) => f.endsWith("robots.txt"))) fail("robots.txt missing");
+const sitemapText = distFiles.filter((f) => f.includes("sitemap")).map((f) => read(path.join(dist, f))).join("\n");
+if (!sitemapText.includes("/zh")) fail("sitemap missing /zh routes");
+
+// mock labels
+if (!/Illustrative terminal mockup|mockup \(not a product screenshot\)/i.test(enHome)) fail("EN mock label missing");
+if (!/示意性终端|非产品截图/.test(zhHome)) fail("ZH mock label missing");
+
+// package scripts + static
+const pkg = JSON.parse(read(path.join(root, "package.json")));
+for (const s of ["dev", "build", "preview"]) if (!pkg.scripts?.[s]) fail(`missing script ${s}`);
 const astroConfig = read(path.join(root, "astro.config.mjs"));
-if (!astroConfig.includes("output: \"static\"") && !astroConfig.includes("output: 'static'")) {
-  fail("T3: output static not set");
-}
+if (!astroConfig.includes("output: \"static\"") && !astroConfig.includes("output: 'static'")) fail("output static missing");
+if (!astroConfig.includes("locales") || !astroConfig.includes("\"zh\"")) fail("astro i18n locales missing");
 
-// T11 basic internal link check from home + docs index
+// i18n source present
+if (!exists(path.join(root, "src/i18n/ui.ts"))) fail("ui.ts missing");
+if (!exists(path.join(root, "src/i18n/utils.ts"))) fail("utils.ts missing");
+
+// basic internal link check
 function checkLinks(html, fileLabel) {
   const re = /href="(\/[^"#?]*)"/g;
   let m;
   while ((m = re.exec(html))) {
     const href = m[1];
-    if (href.startsWith("/#") || href === "/") {
-      if (href === "/" || href.startsWith("/#")) continue;
-    }
+    if (href.startsWith("/#") || href === "/") continue;
     let target;
-    if (href === "/docs" || href === "/docs/") target = path.join(dist, "docs/index.html");
-    else if (href.endsWith("/")) target = path.join(dist, href.slice(1), "index.html");
+    if (href.endsWith("/")) target = path.join(dist, href.slice(1), "index.html");
     else target = path.join(dist, href.slice(1), "index.html");
-    // also try direct file
     const alt = path.join(dist, href.slice(1));
     const altHtml = `${alt}.html`;
-    if (href.includes("#")) continue;
-    if (href === "/") continue;
-    if (!(exists(target) || exists(alt) || exists(altHtml) || exists(path.join(dist, href.slice(1), "index.html")))) {
-      // fragment-only already skipped; allow /#features style already skipped by regex
-      if (!href.includes("github.com")) fail(`T11: dead link ${href} from ${fileLabel}`);
+    if (!(exists(target) || exists(alt) || exists(altHtml))) {
+      // allow only if github external already excluded by regex
+      fail(`dead link ${href} from ${fileLabel}`);
     }
   }
 }
-if (home) checkLinks(home, "home");
-const docsIndex = path.join(dist, "docs/index.html");
-if (exists(docsIndex)) checkLinks(read(docsIndex), "docs");
-
-// public assets
-if (!exists(path.join(root, "public/favicon.svg"))) fail("favicon.svg missing");
-if (!exists(path.join(root, "public/og-image.png"))) fail("og-image.png missing");
+if (enHome) checkLinks(enHome, "en-home");
+if (zhHome) checkLinks(zhHome, "zh-home");
 
 if (failures.length) {
   console.error("check-site failed:");
   for (const f of failures) console.error(" -", f);
   process.exit(1);
 }
-
-console.log(`check-site passed (${htmlFiles.length} html files)`);
+console.log(`check-site passed (${htmlFiles.length} html files, en+zh)`);

@@ -1,51 +1,16 @@
 ---
-const faqs = [
-  {
-    q: "What is AI Dev Server?",
-    a: "An immutable Ubuntu 24.04 terminal development environment distributed as a multi-arch Docker image. It preinstalls AI coding CLIs, language toolchains, and Docker client tools, with durable state in named volumes.",
-  },
-  {
-    q: "Why use Docker?",
-    a: "The image stays immutable while projects and credentials live in volumes. You can recreate the container, pin versions, and keep a consistent toolchain without polluting the host user environment.",
-  },
-  {
-    q: "Which AI coding agents are supported?",
-    a: "The image preinstalls Claude Code, Codex CLI, Oh My ClaudeCode (OMC), Oh My Codex (OMX), and SaladDay cc-switch-cli. Authentication is manual and persists in the active /config generation.",
-  },
-  {
-    q: "Can I run it on a NAS?",
-    a: "If the NAS provides a Linux Docker Engine, Compose v2, and a usable docker.sock on amd64/arm64, yes — under the same trusted single-user security model.",
-  },
-  {
-    q: "Can I customize the development environment?",
-    a: "Install project dependencies inside /workspace as usual. Image contents change through reviewed image rebuilds/tags rather than runtime self-updaters.",
-  },
-  {
-    q: "Where is my source code stored?",
-    a: "Projects live in the workspace named volume mounted at /workspace. Configuration and credentials live under /config generations. data, logs, models, and backups have their own volumes.",
-  },
-  {
-    q: "Is there a browser-based product UI or published localhost app port?",
-    a: "No. AI Dev Server is terminal-first and does not ship a browser product UI. Compose does not publish an application HTTP port. Enter with scripts/shell or scripts/tmux.",
-  },
-  {
-    q: "Does the container provide its own SSH service?",
-    a: "No. The image does not run an SSH daemon. Connect to the Docker host first, then use scripts/shell. Use tmux to retain sessions across host disconnects.",
-  },
-  {
-    q: "Is it open source?",
-    a: "Yes. The project is licensed under the MIT License.",
-  },
-  {
-    q: "How can I contribute?",
-    a: "Read CONTRIBUTING.md, keep persistence and security contracts intact, add tests for behavior changes, and open a pull request on GitHub.",
-  },
-];
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const faqs = [1,2,3,4,5,6,7,8,9,10].map((n) => ({
+  q: t(locale, `faq.${n}.q` as any),
+  a: t(locale, `faq.${n}.a` as any),
+}));
 ---
-
 <section id="faq" class="container-page py-20">
   <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">FAQ</h2>
+    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{t(locale, "faq.title")}</h2>
   </div>
   <div class="mx-auto mt-10 max-w-3xl divide-y divide-[var(--color-border)] rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]">
     {faqs.map((item) => (

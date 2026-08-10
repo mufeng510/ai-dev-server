@@ -1,42 +1,25 @@
 ---
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
 interface Item { label: string; href: string; external?: boolean }
-interface Props { items: readonly Item[] }
-const { items } = Astro.props;
+interface Props { locale: Locale; items: readonly Item[] }
+const { locale, items } = Astro.props;
 ---
-
 <div class="relative" data-mobile-menu>
-  <button
-    type="button"
-    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]"
-    aria-expanded="false"
-    aria-controls="mobile-nav-panel"
-    data-mobile-menu-button
-  >
-    <span data-mobile-menu-label class="sr-only">Open menu</span>
+  <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]" aria-expanded="false" aria-controls="mobile-nav-panel" data-mobile-menu-button>
+    <span data-mobile-menu-label class="sr-only">{t(locale, "nav.menuOpen")}</span>
     <span aria-hidden="true" data-mobile-menu-glyph>☰</span>
   </button>
-  <div
-    id="mobile-nav-panel"
-    hidden
-    class="absolute right-0 mt-2 w-56 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-2 shadow-lg"
-    role="navigation"
-    aria-label="Mobile"
-    data-mobile-menu-panel
-  >
-    <nav class="flex flex-col gap-1" aria-label="Mobile primary">
+  <div id="mobile-nav-panel" hidden class="absolute right-0 mt-2 w-56 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-2 shadow-lg" role="navigation" aria-label={t(locale, "nav.mobile")} data-mobile-menu-panel data-open-label={t(locale, "nav.menuOpen")} data-close-label={t(locale, "nav.menuClose")}>
+    <nav class="flex flex-col gap-1" aria-label={t(locale, "nav.primary")}>
       {items.map((item) => (
-        <a
-          href={item.href}
-          class="rounded-lg px-3 py-2 text-sm text-[var(--color-fg)] no-underline hover:bg-[var(--color-surface)]"
-          {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-        >
+        <a href={item.href} class="rounded-lg px-3 py-2 text-sm text-[var(--color-fg)] no-underline hover:bg-[var(--color-surface)]" {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
           {item.label}{item.external ? " ↗" : ""}
         </a>
       ))}
     </nav>
   </div>
 </div>
-
 <script>
   document.querySelectorAll("[data-mobile-menu]").forEach((root) => {
     const button = root.querySelector("[data-mobile-menu-button]") as HTMLButtonElement | null;
@@ -44,37 +27,29 @@ const { items } = Astro.props;
     const label = root.querySelector("[data-mobile-menu-label]") as HTMLElement | null;
     const glyph = root.querySelector("[data-mobile-menu-glyph]") as HTMLElement | null;
     if (!button || !panel) return;
-
+    const openLabel = panel.dataset.openLabel || "Open menu";
+    const closeLabel = panel.dataset.closeLabel || "Close menu";
     const close = () => {
       panel.hidden = true;
       button.setAttribute("aria-expanded", "false");
-      if (label) label.textContent = "Open menu";
+      if (label) label.textContent = openLabel;
       if (glyph) glyph.textContent = "☰";
       button.focus();
     };
     const open = () => {
       panel.hidden = false;
       button.setAttribute("aria-expanded", "true");
-      if (label) label.textContent = "Close menu";
+      if (label) label.textContent = closeLabel;
       if (glyph) glyph.textContent = "✕";
       const firstLink = panel.querySelector("a") as HTMLElement | null;
       firstLink?.focus();
     };
-
-    button.addEventListener("click", () => {
-      if (panel.hidden) open();
-      else close();
-    });
+    button.addEventListener("click", () => (panel.hidden ? open() : close()));
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !panel.hidden) {
-        event.preventDefault();
-        close();
-      }
+      if (event.key === "Escape" && !panel.hidden) { event.preventDefault(); close(); }
     });
     document.addEventListener("click", (event) => {
-      if (!root.contains(event.target as Node)) {
-        if (!panel.hidden) close();
-      }
+      if (!root.contains(event.target as Node) && !panel.hidden) close();
     });
   });
 </script>

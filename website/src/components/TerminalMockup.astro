@@ -1,27 +1,26 @@
 ---
+import { t } from "../i18n/ui";
+import type { Locale } from "../i18n/utils";
+interface Props { locale: Locale }
+const { locale } = Astro.props;
 ---
 <figure class="card overflow-hidden">
-  <figcaption class="border-b border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-muted)]">
-    Illustrative terminal mockup (not a product screenshot)
-  </figcaption>
+  <figcaption class="border-b border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-muted)]">{t(locale, "mock.caption")}</figcaption>
   <div class="grid min-h-[280px] md:grid-cols-[200px_minmax(0,1fr)]">
     <div class="border-b border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:border-b-0 md:border-r">
-      <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">/workspace</p>
+      <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">{t(locale, "mock.workspace")}</p>
       <ul class="space-y-2 p-0 list-none font-mono text-sm text-[var(--color-fg)]">
-        <li>src/</li>
-        <li>docs/</li>
-        <li>tests/</li>
-        <li>docker-compose.yml</li>
+        <li>src/</li><li>docs/</li><li>tests/</li><li>docker-compose.yml</li>
       </ul>
     </div>
     <div class="bg-[var(--color-code)] p-4 font-mono text-sm leading-7 text-slate-100">
-      <p class="text-slate-400"># on the Docker host</p>
+      <p class="text-slate-400">{t(locale, "mock.hostComment")}</p>
       <p><span class="text-sky-300">host</span>$ docker compose up -d</p>
       <p><span class="text-sky-300">host</span>$ scripts/shell</p>
-      <p class="text-slate-400"># inside the container as dev</p>
+      <p class="text-slate-400">{t(locale, "mock.insideComment")}</p>
       <p><span class="text-emerald-400">dev@ai-dev</span>:<span class="text-sky-300">/workspace</span>$ tmux new -As dev</p>
       <p><span class="text-emerald-400">dev@ai-dev</span>:<span class="text-sky-300">/workspace</span>$ claude</p>
-      <p class="text-slate-300"> persistent volumes · docker sock · multi-arch image</p>
+      <p class="text-slate-300"> {t(locale, "mock.footerLine")}</p>
       <p class="mt-2 inline-block h-5 w-2 animate-pulse bg-sky-400 align-middle" aria-hidden="true"></p>
     </div>
   </div>

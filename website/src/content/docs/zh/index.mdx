@@ -1,0 +1,36 @@
+---
+title: 简介
+description: AI Dev Server 是什么，以及终端开发环境如何组织。
+order: 1
+---
+
+**AI Dev Server**（`ai-dev`）是面向 `linux/amd64` 与 `linux/arm64` 的不可变 Ubuntu 24.04 **终端**开发环境。
+
+镜像预装：
+
+- Docker CLI、Compose、Buildx（通过宿主机 Docker Socket）
+- 语言工具链（Node.js、pnpm、Bun、Python/uv、Go、Rust、OpenJDK 等）
+- AI 编程工具：Claude Code、Codex CLI、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）、SaladDay `cc-switch-cli`
+- 终端常用组件：Zsh、tmux、Git、GitHub CLI
+
+项目、凭据、工具状态、日志、模型与备份保存在**命名卷**中，而不是写进镜像。
+
+## 它不是什么
+
+- 不是基于浏览器的产品界面
+- 不是容器内 SSH 服务
+- 不是多租户 SaaS
+
+Compose **不发布**应用 HTTP 端口。请使用 `scripts/shell` 或 `scripts/tmux` 进入。
+
+## 安全优先
+
+Compose 服务以读写方式挂载 `/var/run/docker.sock`。原始 Docker Socket 访问权限**等同于宿主机 root**。仅可部署在可信的单用户服务器上，并且只能打开可信仓库和工具。开始前请阅读[安全](/zh/docs/security)。
+
+## 默认镜像
+
+```text
+docker.io/jerry0510/ai-dev:latest
+```
+
+需要固定标签、镜像源或本地构建时，可用 `AI_DEV_IMAGE` 覆盖。

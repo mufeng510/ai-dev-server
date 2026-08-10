@@ -1,0 +1,47 @@
+---
+title: AI 编程工具
+description: 预装的 Claude Code、Codex CLI、OMC、OMX 与 cc-switch-cli。
+order: 5
+---
+
+AI Dev Server 在镜像中预装多种 AI 编程工具。请将它们描述为预装 CLI，而不是额外的厂商“官方集成”。
+
+## Claude Code
+
+```bash
+scripts/exec claude auth login
+```
+
+无图形服务器上请在本地浏览器完成 URL/代码流程。凭据通过当前配置代的 `CLAUDE_CONFIG_DIR` 持久化。
+
+## Codex CLI
+
+```bash
+scripts/exec codex login --device-auth
+scripts/exec codex login status
+```
+
+设备登录适合无头服务器。凭据位于配置代选择的 `CODEX_HOME`。
+
+## Oh My ClaudeCode（OMC）
+
+镜像含锁定版本的 `omc` CLI。项目级插件配置需在目标项目中按 README 的 Claude Code 插件流程操作；项目文件位于 `/workspace`。
+
+## Oh My Codex（OMX）
+
+新配置卷会离线完成用户级初始化并运行 `omx doctor`，但不会替你登录 Codex。
+
+```bash
+scripts/exec omx doctor
+```
+
+## cc-switch-cli
+
+镜像包含 SaladDay 无头 TUI/可脚本 CLI，不是同名桌面 GUI。
+
+```bash
+scripts/exec cc-switch --version
+scripts/exec cc-switch config path
+```
+
+将整个 cc-switch 状态目录视为机密。

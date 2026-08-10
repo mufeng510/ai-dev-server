@@ -1,0 +1,40 @@
+---
+import type { Locale } from "../i18n/utils";
+import { switchLocalePath } from "../i18n/utils";
+import { t } from "../i18n/ui";
+
+interface Props {
+  locale: Locale;
+  currentPath: string;
+}
+const { locale, currentPath } = Astro.props;
+const enHref = switchLocalePath(currentPath, "en");
+const zhHref = switchLocalePath(currentPath, "zh");
+---
+
+<div class="flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-0.5 text-xs font-medium" role="group" aria-label={t(locale, "lang.label")}>
+  <a
+    href={enHref}
+    class:list={[
+      "rounded-md px-2 py-1 no-underline",
+      locale === "en"
+        ? "bg-[var(--color-surface)] text-[var(--color-fg)]"
+        : "text-[var(--color-muted)] hover:text-[var(--color-fg)]",
+    ]}
+    hreflang="en"
+    lang="en"
+    aria-current={locale === "en" ? "true" : undefined}
+  >{t(locale, "lang.en")}</a>
+  <a
+    href={zhHref}
+    class:list={[
+      "rounded-md px-2 py-1 no-underline",
+      locale === "zh"
+        ? "bg-[var(--color-surface)] text-[var(--color-fg)]"
+        : "text-[var(--color-muted)] hover:text-[var(--color-fg)]",
+    ]}
+    hreflang="zh-CN"
+    lang="zh-CN"
+    aria-current={locale === "zh" ? "true" : undefined}
+  >{t(locale, "lang.zh")}</a>
+</div>

@@ -1,0 +1,80 @@
+---
+title: 安装
+description: AI Dev Server 的前提条件与推荐快速开始路径。
+order: 2
+---
+
+## 前提条件
+
+- 具备 Docker Engine、Docker Compose v2 与可用 `/var/run/docker.sock` 的 Linux Docker 主机
+- amd64 或 arm64 CPU
+- 有权限使用宿主机 Docker
+- 足够容纳镜像、六个命名卷与备份的磁盘空间
+
+## 快速开始
+
+```bash
+git clone https://github.com/mufeng510/ai-dev-server.git
+cd ai-dev-server
+docker compose up -d
+docker compose ps
+```
+
+可选身份与时区（`PUID`、`PGID`、`TZ`；默认 `1000`、`1000`、`UTC`）：
+
+```bash
+PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
+```
+
+不修改 Compose 也可覆盖镜像：
+
+```bash
+AI_DEV_IMAGE=docker.io/jerry0510/ai-dev:1.2.3 docker compose up -d
+```
+
+## 进入环境
+
+在 Compose 项目目录：
+
+```bash
+scripts/shell
+```
+
+等价写法：
+
+```bash
+docker compose exec --user dev ai-dev ai-dev-shell
+docker exec -it --user dev ai-dev ai-dev-shell
+```
+
+一次性命令：
+
+```bash
+scripts/exec git --version
+scripts/exec ai-dev readiness
+scripts/exec ai-dev doctor
+```
+
+## 用 tmux 保持会话
+
+tmux 运行在**容器内**，宿主机 SSH 断开不会直接打断工作：
+
+```bash
+scripts/tmux
+```
+
+## 手动设置要点
+
+启动不会替你发明身份、登录 AI 提供方、创建 SSH 密钥或启动更新器。
+
+### Git / GitHub / Claude / Codex
+
+```bash
+scripts/exec git config --global user.name "Your Name"
+scripts/exec git config --global user.email "you@example.com"
+scripts/exec gh auth login
+scripts/exec claude auth login
+scripts/exec codex login --device-auth
+```
+
+凭据保存在当前 `/config` 配置代中。不要把令牌写入 Compose 或提交到仓库。
