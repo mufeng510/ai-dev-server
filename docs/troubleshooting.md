@@ -55,6 +55,20 @@ Use `scripts/shell` and `scripts/exec`. Docker exec defaults to the image's conf
 
 No. SSH to the Docker host, run `scripts/shell`, and use tmux to retain sessions.
 
+### How do I import an existing GitHub SSH key?
+
+Copy the host private key into the managed `~/.ssh` path as `dev` (it resolves to `/config/generations/<id>/ssh`). Do not bind-mount the host `~/.ssh` tree.
+
+```bash
+docker exec -u dev ai-dev ai-dev-run mkdir -p /home/dev/.ssh
+docker cp ~/.ssh/id_ed25519 ai-dev:/home/dev/.ssh/id_ed25519
+docker cp ~/.ssh/id_ed25519.pub ai-dev:/home/dev/.ssh/id_ed25519.pub
+docker exec -u dev ai-dev ai-dev-run bash -lc 'chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_ed25519 && chmod 644 ~/.ssh/id_ed25519.pub'
+docker exec -u dev ai-dev ai-dev-run ssh -T git@github.com
+```
+
+Replace `id_ed25519` with `id_rsa` or your key name when needed. Full steps are in [README](../README.md#git-and-ssh) / [README.zh-CN](../README.zh-CN.md).
+
 ### Can I remove a volume I do not use?
 
 No. Startup and migration declare all six roots. Keep all six named volumes mounted.

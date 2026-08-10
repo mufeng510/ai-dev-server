@@ -1,0 +1,105 @@
+---
+title: Installation
+description: Prerequisites and the recommended Quick Start path for AI Dev Server.
+order: 2
+---
+
+## Prerequisites
+
+- Linux Docker host with Docker Engine, Docker Compose v2, and a working `/var/run/docker.sock`
+- amd64 or arm64 CPU
+- Permission to use Docker on the host
+- Enough disk for the image, six named volumes, and backups
+
+## Quick Start
+
+```bash
+git clone https://github.com/mufeng510/ai-dev-server.git
+cd ai-dev-server
+docker compose up -d
+docker compose ps
+```
+
+Optional identity and timezone values (`PUID`, `PGID`, `TZ`; defaults `1000`, `1000`, `UTC`):
+
+```bash
+PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
+```
+
+Pin or override the image without editing Compose:
+
+```bash
+AI_DEV_IMAGE=docker.io/jerry0510/ai-dev:1.2.3 docker compose up -d
+```
+
+## Enter the environment
+
+From the Compose project directory:
+
+```bash
+scripts/shell
+```
+
+Equivalents:
+
+```bash
+docker compose exec --user dev ai-dev ai-dev-shell
+docker exec -it --user dev ai-dev ai-dev-shell
+```
+
+One-shot commands with the same generation resolver:
+
+```bash
+scripts/exec git --version
+scripts/exec ai-dev readiness
+scripts/exec ai-dev doctor
+```
+
+## Keep a session with tmux
+
+tmux runs **inside** the container so host SSH disconnects do not kill shell work:
+
+```bash
+scripts/tmux
+```
+
+Or:
+
+```bash
+scripts/shell
+tmux new -As dev
+```
+
+## Manual setup highlights
+
+Startup never invents identity, logs into an AI provider, creates SSH keys, or starts an updater for you.
+
+### Git
+
+```bash
+scripts/exec git config --global user.name "Your Name"
+scripts/exec git config --global user.email "you@example.com"
+```
+
+### GitHub CLI
+
+```bash
+scripts/exec gh auth login
+```
+
+### Claude Code
+
+```bash
+scripts/exec claude auth login
+```
+
+Complete the URL/code flow on your local browser when the server is headless.
+
+### Codex CLI
+
+```bash
+scripts/exec codex login --device-auth
+scripts/exec codex login status
+```
+
+Credentials persist in the active `/config` generation. Do not put tokens in Compose or commit them.

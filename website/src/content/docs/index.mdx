@@ -1,0 +1,36 @@
+---
+title: Introduction
+description: What AI Dev Server is and how the terminal development environment fits together.
+order: 1
+---
+
+**AI Dev Server** (`ai-dev`) is an immutable Ubuntu 24.04 terminal development environment for `linux/amd64` and `linux/arm64`.
+
+It ships as a Docker image with:
+
+- Docker CLI, Compose, and Buildx (via the host Docker socket)
+- Language toolchains (Node.js, pnpm, Bun, Python/uv, Go, Rust, OpenJDK, and more)
+- AI coding tools: Claude Code, Codex CLI, Oh My ClaudeCode (OMC), Oh My Codex (OMX), and SaladDay `cc-switch-cli`
+- Terminal essentials such as Zsh, tmux, Git, and GitHub CLI
+
+Projects, credentials, tool state, logs, models, and backups live in **named volumes**, not in the image.
+
+## What it is not
+
+- Not a browser-based product UI or web-terminal product surface
+- Not an in-container SSH service
+- Not a multi-tenant SaaS
+
+Compose does **not** publish an application HTTP port. You enter with `scripts/shell` or `scripts/tmux`.
+
+## Security first
+
+The Compose service mounts `/var/run/docker.sock` read-write. Access to the raw Docker socket is effectively **host-root access**. Use this only on a trusted, single-user server with trusted repositories and tools. Read [Security](/docs/security) before starting.
+
+## Default image
+
+```text
+docker.io/jerry0510/ai-dev:latest
+```
+
+Override with `AI_DEV_IMAGE` when you need a pinned tag, mirror, or local build.

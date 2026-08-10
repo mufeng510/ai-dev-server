@@ -1,0 +1,51 @@
+---
+title: AI coding tools
+description: Preinstalled Claude Code, Codex CLI, OMC, OMX, and cc-switch-cli workflows.
+order: 5
+---
+
+AI Dev Server preinstalls several AI coding tools in the image. They are packaged CLIs — describe them as preinstalled tools, not as separate vendor “official integrations.”
+
+## Claude Code
+
+```bash
+scripts/exec claude auth login
+```
+
+Complete the URL/code flow on a local browser when the host is headless. Credentials persist through `CLAUDE_CONFIG_DIR` in the active generation.
+
+## Codex CLI
+
+```bash
+scripts/exec codex login --device-auth
+scripts/exec codex login status
+```
+
+Device authentication works well on headless servers. Credentials live under generation-selected `CODEX_HOME`.
+
+## Oh My ClaudeCode (OMC)
+
+The pinned `omc` CLI is in the image. For the official Claude Code plugin workflow, start Claude from the target project and run the marketplace/plugin commands documented in the repository README. Project files remain under `/workspace`; the container does not automate that interactive marketplace operation.
+
+## Oh My Codex (OMX)
+
+On a fresh config volume, startup performs packaged user-scope initialization offline and runs `omx doctor` before committing the first configuration generation. It does not authenticate Codex for you.
+
+```bash
+scripts/exec omx doctor
+scripts/exec bash -lc 'cd /workspace/my-project && omx setup --scope project --merge-agents'
+```
+
+Repository-local OMX runtime state stays in `/workspace/my-project/.omx`.
+
+## cc-switch-cli
+
+The image contains the pinned headless TUI/scriptable CLI from SaladDay — not the similarly named desktop GUI.
+
+```bash
+scripts/exec cc-switch --version
+scripts/exec cc-switch config path
+scripts/exec cc-switch provider list
+```
+
+Treat the entire cc-switch state directory as secret.

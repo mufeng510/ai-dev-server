@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+npm-install.log
+npm-install.err
+build.log
+run-install.bat
+run-build.bat
+.DS_Store

@@ -160,14 +160,56 @@ Startup never invents identity, logs into an AI provider, creates SSH keys, conf
 
 ### Git And SSH
 
+Configure Git identity first:
+
 ```bash
 scripts/exec git config --global user.name "Your Name"
 scripts/exec git config --global user.email "you@example.com"
-scripts/shell
-ssh-keygen -t ed25519 -C "you@example.com"
 ```
 
-Add the printed public key to the relevant Git host. Private keys persist in the selected configuration generation under `/config`.
+`~/.ssh` is a managed route into the active configuration generation under `/config`, so keys survive container recreate when volumes are kept. Do not bind-mount the host `~/.ssh` directory and do not put private keys in Compose or git.
+
+#### Generate a new key inside the container
+
+```bash
+scripts/shell
+ssh-keygen -t ed25519 -C "you@example.com"
+cat ~/.ssh/id_ed25519.pub
+```
+
+Add the printed public key to GitHub (or another Git host).
+
+#### Import an existing host key (for example GitHub)
+
+Copy the host private key (and public key if present) into the container as `dev`. Example for `id_ed25519`:
+
+```bash
+docker exec -u dev ai-dev ai-dev-run mkdir -p /home/dev/.ssh
+docker cp ~/.ssh/id_ed25519 ai-dev:/home/dev/.ssh/id_ed25519
+docker cp ~/.ssh/id_ed25519.pub ai-dev:/home/dev/.ssh/id_ed25519.pub
+docker exec -u dev ai-dev ai-dev-run bash -lc 'chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_ed25519 && chmod 644 ~/.ssh/id_ed25519.pub'
+```
+
+Optional GitHub SSH config:
+
+```bash
+docker exec -u dev -i ai-dev ai-dev-run bash -lc 'cat > ~/.ssh/config && chmod 600 ~/.ssh/config' <<'EOF'
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+EOF
+```
+
+Verify:
+
+```bash
+docker exec -u dev ai-dev ai-dev-run ssh -T git@github.com
+docker exec -u dev ai-dev ai-dev-run bash -lc 'readlink -f ~/.ssh; ls -la ~/.ssh'
+```
+
+`ssh -T git@github.com` often exits non-zero even on success; look for `Hi <username>! You've successfully authenticated`. `readlink -f ~/.ssh` should resolve under `/config/generations/<id>/ssh`. Use `id_rsa` (or your real key name) instead of `id_ed25519` when that is what the host uses.
 
 ### GitHub CLI
 

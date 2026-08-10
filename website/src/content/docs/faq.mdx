@@ -1,0 +1,33 @@
+---
+title: FAQ
+description: Common questions about ports, SSH, volumes, updates, and contribution.
+order: 7
+---
+
+### Does the container provide SSH access?
+
+No. The image does not run an SSH daemon. SSH to the Docker host, run `scripts/shell`, and use tmux to retain sessions.
+
+### Is there a browser product UI or localhost app URL?
+
+No. Compose publishes no application HTTP port. Entry is via `scripts/shell` / `scripts/tmux`.
+
+### Can I remove a volume I do not use?
+
+No. Startup and migration declare all six roots. Keep all six named volumes mounted: workspace, config, data, logs, models, backups.
+
+### Can tools update themselves?
+
+No supported workflow uses self-updaters. Change the image version and follow the explicit upgrade process in the repository docs.
+
+### Why does `docker compose down` preserve my files?
+
+Named volumes outlive containers. `docker compose down -v` deletes them and is intentionally absent from normal instructions.
+
+### Does `npm run validate` in the monorepo prove the image works?
+
+No. Offline contract tests are not evidence that Docker builds or native amd64/arm64 release gates passed.
+
+### Is it open source?
+
+Yes — MIT License.

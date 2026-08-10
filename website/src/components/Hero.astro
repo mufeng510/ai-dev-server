@@ -1,0 +1,32 @@
+---
+import { siteConfig } from "../config/site";
+import TerminalMockup from "./TerminalMockup.astro";
+---
+
+<section class="relative overflow-hidden border-b border-[var(--color-border)]">
+  <div class="pointer-events-none absolute inset-0 grid-bg opacity-40" aria-hidden="true"></div>
+  <div class="container-page relative py-16 md:py-24">
+    <div class="mx-auto max-w-3xl text-center">
+      <p class="mb-4 inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-1 text-xs font-medium text-[var(--color-muted)]">
+        Open Source · Self Hosted · Docker Native
+      </p>
+      <p class="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+        AI Development Environment
+      </p>
+      <h1 class="text-4xl font-bold tracking-tight md:text-6xl">
+        Your AI Development<br class="hidden sm:block" /> Environment, Anywhere.
+      </h1>
+      <p class="mx-auto mt-5 max-w-2xl text-base text-[var(--color-muted)] md:text-lg">
+        Run Claude Code, Codex CLI, and your favorite development tools in a self-hosted,
+        immutable Ubuntu 24.04 terminal environment — on amd64 and arm64.
+      </p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <a class="btn btn-primary" href="/docs">Get Started</a>
+        <a class="btn btn-secondary" href={siteConfig.github} target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
+      </div>
+    </div>
+    <div class="mx-auto mt-12 max-w-4xl">
+      <TerminalMockup />
+    </div>
+  </div>
+</section>

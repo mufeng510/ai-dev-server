@@ -1,0 +1,38 @@
+---
+import CodeBlock from "./CodeBlock.astro";
+import { siteConfig } from "../config/site";
+
+const clone = `git clone ${siteConfig.github}.git\ncd ai-dev-server`;
+const start = `docker compose up -d\n# optional:\n# PUID=\"$(id -u)\" PGID=\"$(id -g)\" TZ=Asia/Shanghai docker compose up -d\n# AI_DEV_IMAGE=docker.io/jerry0510/ai-dev:1.2.3 docker compose up -d`;
+const enter = `scripts/shell\n# durable tmux session:\nscripts/tmux`;
+---
+
+<section id="quick-start" class="container-page py-20">
+  <div class="mx-auto max-w-2xl text-center">
+    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">Get started in minutes.</h2>
+    <p class="mt-3 text-[var(--color-muted)]">
+      Prerequisites: Linux Docker host, Docker Engine, Compose v2, working /var/run/docker.sock, amd64 or arm64.
+      Default image: <code class="font-mono text-xs">{siteConfig.image}</code>
+    </p>
+  </div>
+  <div class="mx-auto mt-10 grid max-w-3xl gap-6">
+    <div>
+      <h3 class="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">1. Clone</h3>
+      <CodeBlock code={clone} />
+    </div>
+    <div>
+      <h3 class="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">2. Start</h3>
+      <CodeBlock code={start} />
+    </div>
+    <div>
+      <h3 class="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">3. Enter the environment</h3>
+      <CodeBlock code={enter} />
+      <p class="mt-3 text-sm text-[var(--color-muted)]">
+        There is no published web app port and no in-container SSH daemon. On a remote machine, reach the Docker host first, then use the scripts above.
+      </p>
+    </div>
+    <p class="text-center">
+      <a class="text-[var(--color-accent)]" href="/docs/installation">Read the full documentation →</a>
+    </p>
+  </div>
+</section>

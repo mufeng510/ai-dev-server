@@ -1,0 +1,42 @@
+---
+import CodeBlock from "./CodeBlock.astro";
+const steps = [
+  {
+    n: "01",
+    title: "Start",
+    body: "On a Linux Docker host with Engine, Compose v2, and a working docker.sock:",
+    code: "docker compose up -d",
+  },
+  {
+    n: "02",
+    title: "Enter",
+    body: "Open the supported Zsh session as dev (not a web app URL, not SSH into the container):",
+    code: "scripts/shell\n# or durable sessions:\nscripts/tmux",
+  },
+  {
+    n: "03",
+    title: "Build",
+    body: "Authenticate tools as needed, then develop under /workspace with your AI coding agents.",
+    code: "scripts/exec claude auth login\nscripts/exec codex login --device-auth",
+  },
+];
+---
+
+<section id="how-it-works" class="container-page py-20">
+  <div class="mx-auto max-w-2xl text-center">
+    <h2 class="text-3xl font-bold tracking-tight md:text-4xl">How it works</h2>
+    <p class="mt-3 text-[var(--color-muted)]">Three steps from a trusted Docker host to a ready AI development shell.</p>
+  </div>
+  <div class="mt-10 grid gap-6 lg:grid-cols-3">
+    {steps.map((step) => (
+      <article class="card p-5">
+        <p class="font-mono text-sm text-[var(--color-accent)]">{step.n}</p>
+        <h3 class="mt-2 text-xl font-semibold">{step.title}</h3>
+        <p class="mt-2 text-sm text-[var(--color-muted)]">{step.body}</p>
+        <div class="mt-4">
+          <CodeBlock code={step.code} />
+        </div>
+      </article>
+    ))}
+  </div>
+</section>

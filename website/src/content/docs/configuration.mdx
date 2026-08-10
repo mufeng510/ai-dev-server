@@ -1,0 +1,51 @@
+---
+title: Configuration and persistence
+description: Environment knobs, configuration generations, and tool state durability.
+order: 4
+---
+
+## Compose environment
+
+Supported startup environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PUID` | `1000` | Host user id recorded to own persistent volumes |
+| `PGID` | `1000` | Host group id |
+| `TZ` | `UTC` | Container timezone |
+| `AI_DEV_IMAGE` | `docker.io/jerry0510/ai-dev:latest` | Image override |
+
+The first successful start records the selected UID/GID. Later identity changes require the offline identity migration documented in the repository `docs/upgrade.md`.
+
+## Configuration generations
+
+Managed configuration is stored under:
+
+```text
+/config/generations/<generation-id>
+```
+
+`/config/active-generation` selects the live generation. `ai-dev-run` validates that pointer before exporting tool homes such as:
+
+- `CLAUDE_CONFIG_DIR`
+- `CODEX_HOME`
+- `OMC_STATE_DIR`
+- `CC_SWITCH_CONFIG_DIR`
+- `GH_CONFIG_DIR`
+
+Managed links for paths like `.ssh`, Git config, Zsh, OMC, and gh point into the selected generation. Unsafe files or links at managed paths fail closed.
+
+## What stays in /workspace
+
+Repository-local OMC/OMX project state remains under `/workspace`. `/home/dev` is ephemeral except for managed routes.
+
+## Operator helpers
+
+```bash
+scripts/exec ai-dev readiness
+scripts/exec ai-dev doctor
+scripts/exec cc-switch config path
+scripts/exec omx doctor
+```
+
+For the full recreate-safe tool inventory, see the repository document `docs/tool-state-contract.md`.

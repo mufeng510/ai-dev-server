@@ -1,0 +1,54 @@
+---
+import { siteConfig } from "../config/site";
+---
+
+<footer class="mt-20 border-t border-[var(--color-border)]">
+  <div class="container-page grid gap-10 py-12 md:grid-cols-4">
+    <div class="md:col-span-1">
+      <div class="flex items-center gap-2 font-semibold">
+        <img src="/logo.svg" width="24" height="24" alt="" />
+        {siteConfig.name}
+      </div>
+      <p class="mt-3 text-sm text-[var(--color-muted)]">
+        Open source AI development environment. Self-hosted, Docker-native, terminal-first.
+      </p>
+      <p class="mt-3 text-xs text-[var(--color-muted)]">License: {siteConfig.license}</p>
+    </div>
+    <div>
+      <h2 class="text-sm font-semibold">Product</h2>
+      <ul class="mt-3 space-y-2 p-0 list-none">
+        {siteConfig.footer.product.map((item) => (
+          <li>
+            <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={item.href} {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-sm font-semibold">Resources</h2>
+      <ul class="mt-3 space-y-2 p-0 list-none">
+        {siteConfig.footer.resources.map((item) => (
+          <li>
+            <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={item.href} {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-sm font-semibold">Community</h2>
+      <ul class="mt-3 space-y-2 p-0 list-none">
+        {siteConfig.footer.community.map((item) => (
+          <li>
+            <a class="text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-fg)]" href={item.href} target="_blank" rel="noopener noreferrer">{item.label} ↗</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-[var(--color-border)]">
+    <div class="container-page flex flex-col gap-2 py-6 text-sm text-[var(--color-muted)] md:flex-row md:items-center md:justify-between">
+      <p>© {siteConfig.copyrightYear} {siteConfig.name}</p>
+      <p>Default image: <code class="font-mono text-xs">{siteConfig.image}</code></p>
+    </div>
+  </div>
+</footer>

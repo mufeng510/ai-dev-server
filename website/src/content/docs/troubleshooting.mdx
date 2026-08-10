@@ -1,0 +1,47 @@
+---
+title: Troubleshooting
+description: Common failure modes and recovery guidance for AI Dev Server.
+order: 8
+---
+
+## Health is not ready
+
+Check:
+
+```bash
+docker compose ps
+scripts/exec ai-dev readiness
+scripts/exec ai-dev doctor
+```
+
+Review `/logs` through a recovery path if startup journals indicate migration or identity issues. Keep the service stopped while inspecting migration journals under `/config`.
+
+## Login does not open a browser
+
+The service is headless. Use the URL/code printed by Claude Code. For Codex, use device flow:
+
+```bash
+scripts/exec codex login --device-auth
+```
+
+Authentication is intentionally not part of health.
+
+## Shell or command runs as root
+
+Use `scripts/shell` and `scripts/exec`. Docker exec defaults to the image root user unless you force `dev`. Raw root exec is only for recovery.
+
+## Managed route is unsafe
+
+Startup only replaces registered links it owns. A regular file, external symlink, or link to an unregistered generation at a managed path causes a closed failure. Move the conflicting path aside from a root recovery session, verify contents, then restart.
+
+## tmux session disappeared
+
+tmux session state lives in the container process. `docker compose restart` or recreating the container ends the session. Tool config in named volumes is separate and persists.
+
+## More detail
+
+See the repository documents:
+
+- `docs/troubleshooting.md`
+- `docs/upgrade.md`
+- `docs/tool-state-contract.md`

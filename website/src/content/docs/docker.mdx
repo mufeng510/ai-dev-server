@@ -1,0 +1,44 @@
+---
+title: Docker and runtime
+description: Compose service shape, volumes, image tags, and runtime model.
+order: 3
+---
+
+## Compose service
+
+The committed Compose project name is `ai-dev`. The primary service:
+
+- uses image `${AI_DEV_IMAGE:-docker.io/jerry0510/ai-dev:latest}`
+- sets `working_dir: /workspace`
+- restarts `unless-stopped`
+- drops capabilities then re-adds only ownership-repair caps
+- mounts six named volumes plus host `/var/run/docker.sock` read-write
+- runs healthcheck `ai-dev-health`
+
+There are **no published ports** in the Compose file.
+
+## Named volumes
+
+| Volume | Mount | Role |
+| --- | --- | --- |
+| workspace | `/workspace` | Projects and repository-local state |
+| config | `/config` | Credentials and versioned user configuration |
+| data | `/data` | Caches and related data |
+| logs | `/logs` | Logs and structured events |
+| models | `/models` | Model artifacts |
+| backups | `/backups` | Backup material |
+
+`docker compose down` keeps named volumes. `docker compose down -v` deletes them and is intentionally absent from normal instructions.
+
+## Image model
+
+- Base: digest-pinned Ubuntu 24.04
+- Architectures: amd64 and arm64
+- `versions.env` pins tool versions
+- Runtime self-update is disabled; upgrades come from reviewed image rebuilds/tags
+
+Published tag policy is documented in the repository README (edge/sha tags from `main`, stable semver tags, and prerelease tags).
+
+## Process model
+
+Root-owned `tini` is PID 1. After bootstrap, the entrypoint runs the foreground workload as `dev`. Supported interactive wrappers also require `dev`. A bare root exec is a recovery interface, not the normal development path.

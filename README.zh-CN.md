@@ -150,12 +150,35 @@ ai-dev-tmux
 
 启动过程不会虚构身份、登录 AI 服务、创建 SSH 密钥、配置 cc-switch 提供方或启用代理和自动更新。
 
+先配置 Git 身份。`~/.ssh` 由 managed route 指向 `/config` 中的当前配置代，重建容器（保留卷）后密钥仍在。不要把宿主机整个 `~/.ssh` 挂进容器，也不要把私钥写入 Compose 或仓库。
+
 ```bash
-# Git 与 SSH
+# Git 身份
 scripts/exec git config --global user.name "Your Name"
 scripts/exec git config --global user.email "you@example.com"
+
+# 方式 A：在容器内新生成密钥
 scripts/shell
 ssh-keygen -t ed25519 -C "you@example.com"
+cat ~/.ssh/id_ed25519.pub
+# 将公钥添加到 GitHub（或其它 Git 主机）
+
+# 方式 B：导入宿主机已有 GitHub 私钥（以 id_ed25519 为例）
+docker exec -u dev ai-dev ai-dev-run mkdir -p /home/dev/.ssh
+docker cp ~/.ssh/id_ed25519 ai-dev:/home/dev/.ssh/id_ed25519
+docker cp ~/.ssh/id_ed25519.pub ai-dev:/home/dev/.ssh/id_ed25519.pub
+docker exec -u dev ai-dev ai-dev-run bash -lc 'chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_ed25519 && chmod 644 ~/.ssh/id_ed25519.pub'
+# 可选：写入 GitHub SSH config
+docker exec -u dev -i ai-dev ai-dev-run bash -lc 'cat > ~/.ssh/config && chmod 600 ~/.ssh/config' <<'EOF'
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+EOF
+# 验证（成功时常见 Hi <username>!；退出码非 0 也可能正常）
+docker exec -u dev ai-dev ai-dev-run ssh -T git@github.com
+docker exec -u dev ai-dev ai-dev-run bash -lc 'readlink -f ~/.ssh; ls -la ~/.ssh'
 
 # GitHub CLI：浏览器或设备认证
 scripts/exec gh auth login

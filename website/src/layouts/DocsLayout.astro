@@ -1,0 +1,28 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "./Layout.astro";
+import DocsSidebar from "../components/DocsSidebar.astro";
+import { siteConfig } from "../config/site";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
+const pageTitle = `${title} — ${siteConfig.name} Docs`;
+---
+
+<Layout title={pageTitle} description={description}>
+  <div class="container-page py-10 md:py-14">
+    <div class="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <aside class="lg:sticky lg:top-24 lg:self-start">
+        <DocsSidebar docs={docs} current={Astro.url.pathname} />
+      </aside>
+      <article class="prose-docs card p-6 md:p-8">
+        <slot />
+      </article>
+    </div>
+  </div>
+</Layout>

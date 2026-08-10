@@ -1,0 +1,53 @@
+---
+---
+<button
+  type="button"
+  class="theme-toggle inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)]"
+  aria-label="Toggle color theme"
+  title="Toggle theme"
+  data-theme-toggle
+>
+  <span data-theme-icon aria-hidden="true">◐</span>
+</button>
+
+<script>
+  const key = "ai-dev-theme";
+  type Mode = "light" | "dark" | "system";
+
+  function currentMode(): Mode {
+    const stored = localStorage.getItem(key);
+    if (stored === "light" || stored === "dark" || stored === "system") return stored;
+    return "system";
+  }
+
+  function resolveDark(mode: Mode) {
+    return mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+
+  function apply(mode: Mode) {
+    document.documentElement.classList.toggle("dark", resolveDark(mode));
+    document.documentElement.dataset.theme = mode;
+    localStorage.setItem(key, mode);
+    const label = mode === "light" ? "Theme: light (click for dark)" : mode === "dark" ? "Theme: dark (click for system)" : "Theme: system (click for light)";
+    document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+      btn.setAttribute("aria-label", label);
+      btn.setAttribute("title", label);
+      const icon = btn.querySelector("[data-theme-icon]");
+      if (icon) icon.textContent = mode === "light" ? "☀" : mode === "dark" ? "☾" : "◐";
+    });
+  }
+
+  function cycle(mode: Mode): Mode {
+    if (mode === "system") return "light";
+    if (mode === "light") return "dark";
+    return "system";
+  }
+
+  apply(currentMode());
+  document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => apply(cycle(currentMode())));
+  });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (currentMode() === "system") apply("system");
+  });
+</script>
