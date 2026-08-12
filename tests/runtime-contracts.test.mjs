@@ -119,6 +119,9 @@ test("idle supervises always-on code-server with required password and generatio
   assert.match(idle, /CODE_SERVER_EXTENSIONS_DIR|extensions-dir/);
   assert.match(idle, /--disable-update-check/);
   assert.doesNotMatch(idle, /PASSWORD=changeme|password123/i);
+  // Event context keys must stay on the runtime allowlist or startup aborts.
+  assert.doesNotMatch(idle, /ai_dev_event[^\n]*bind_addr/);
+  assert.match(idle, /ai_dev_event "\$\{operation_id\}" code-server\.started info code-server-started/);
 
   assert.match(health, /code-server-not-running/);
   assert.match(health, /code-server-port-closed|8080/);

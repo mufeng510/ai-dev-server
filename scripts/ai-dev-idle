@@ -39,7 +39,7 @@ start_code_server() {
       --disable-update-check \
       "${workspace}" &
   code_server_pid="$!"
-  ai_dev_event "${operation_id}" code-server.started info code-server-started bind_addr "${bind_addr}"
+  ai_dev_event "${operation_id}" code-server.started info code-server-started
 }
 
 shutdown() {
