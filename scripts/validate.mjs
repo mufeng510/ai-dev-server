@@ -42,7 +42,7 @@ const workflows = fs.existsSync(path.join(root, ".github", "workflows"))
   ? fs.readdirSync(path.join(root, ".github", "workflows")).filter((name) => /\.ya?ml$/.test(name)).map((name) => `.github/workflows/${name}`)
   : [];
 if (workflows.length) run("actionlint", "actionlint", workflows);
-if (fs.existsSync(path.join(root, "docker-compose.yml"))) run("compose config", "docker", ["compose", "config", "--quiet"]);
-if (fs.existsSync(path.join(root, "docker-bake.hcl"))) run("bake print", "docker", ["buildx", "bake", "--print"]);
+if (fs.existsSync(path.join(root, "docker-compose.yml"))) CODE_SERVER_PASSWORD=ci-placeholder-not-for-production run("compose config", "docker", ["compose", "config", "--quiet"]);
+if (fs.existsSync(path.join(root, "docker-bake.hcl"))) CODE_SERVER_PASSWORD=ci-placeholder-not-for-production run("bake print", "docker", ["buildx", "bake", "--print"]);
 
 if (failed) process.exitCode = 1;

@@ -93,7 +93,7 @@ Compose requires the variable (`${CODE_SERVER_PASSWORD:?...}`). Starting without
 3. Open `http://<host>:8080` and sign in with that password.
 4. User settings persist in the active `/config` generation (`code-server/`). Extension cache lives under `/data/cache/code-server`.
 
-This is a **breaking change** for older deployments: image upgrades that include code-server will not start until `CODE_SERVER_PASSWORD` is set. Prefer a reverse proxy with TLS in front of port 8080 on any non-loopback network.
+This is a **breaking change** for older deployments: CI uses `ci-placeholder-not-for-production` during static validation; operators must set a real value. image upgrades that include code-server will not start until `CODE_SERVER_PASSWORD` is set. Prefer a reverse proxy with TLS in front of port 8080 on any non-loopback network.
 
 ## Use The Environment
 
