@@ -87,13 +87,13 @@ code-server is preinstalled and starts automatically with the container on `0.0.
 export CODE_SERVER_PASSWORD='replace-with-a-strong-password'
 ```
 
-Compose requires the variable (`${CODE_SERVER_PASSWORD:?...}`). Starting without it fails closed.
+Compose forwards `CODE_SERVER_PASSWORD` (empty default for bake/config tooling). The container workload fails closed if it is unset or empty.
 
 2. Publish is already declared as `8080:8080` in `docker-compose.yml`.
 3. Open `http://<host>:8080` and sign in with that password.
 4. User settings persist in the active `/config` generation (`code-server/`). Extension cache lives under `/data/cache/code-server`.
 
-This is a **breaking change** for older deployments: CI uses `ci-placeholder-not-for-production` during static validation; operators must set a real value. image upgrades that include code-server will not start until `CODE_SERVER_PASSWORD` is set. Prefer a reverse proxy with TLS in front of port 8080 on any non-loopback network.
+This is a **breaking change** for older deployments: image upgrades that include code-server will not stay up until `CODE_SERVER_PASSWORD` is set. Prefer a reverse proxy with TLS in front of port 8080 on any non-loopback network.
 
 ## Use The Environment
 

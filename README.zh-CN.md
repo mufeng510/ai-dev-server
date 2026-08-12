@@ -80,7 +80,7 @@ Compose 会创建六个命名卷。项目名为 `ai-dev`，卷通常命名为 `a
 export CODE_SERVER_PASSWORD='replace-with-a-strong-password'
 ```
 
-Compose 使用 `${CODE_SERVER_PASSWORD:?...}` **强制**提供该变量；未设置时启动失败（fail closed）。
+Compose 会转发 `CODE_SERVER_PASSWORD`（默认空，以便 bake/config 工具可用）；未设置或为空时，容器内 workload **fail closed**。
 
 2. `docker-compose.yml` 已发布 `8080:8080`。
 3. 浏览器打开 `http://<主机>:8080`，使用上述密码登录。

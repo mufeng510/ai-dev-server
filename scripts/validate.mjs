@@ -11,7 +11,9 @@ const staticOnly = args.has("--static-only");
 let failed = false;
 
 function run(label, command, commandArgs, options = {}) {
-  const probe = spawnSync(command, ["--version"], { cwd: root, encoding: "utf8" });
+  const env = { ...process.env };
+  if (!env.CODE_SERVER_PASSWORD) env.CODE_SERVER_PASSWORD = "ci-placeholder-not-for-production";
+  const probe = spawnSync(command, ["--version"], { cwd: root, encoding: "utf8", env });
   if (probe.error || probe.status !== 0) {
     if (options.required || strictTools) {
       console.error(`FAIL ${label}: ${command} is unavailable`);
@@ -19,7 +21,7 @@ function run(label, command, commandArgs, options = {}) {
     } else console.log(`SKIP ${label}: ${command} is unavailable`);
     return;
   }
-  const result = spawnSync(command, commandArgs, { cwd: root, stdio: "inherit" });
+  const result = spawnSync(command, commandArgs, { cwd: root, stdio: "inherit", env });
   if (result.status !== 0) {
     console.error(`FAIL ${label}`);
     failed = true;
@@ -42,7 +44,7 @@ const workflows = fs.existsSync(path.join(root, ".github", "workflows"))
   ? fs.readdirSync(path.join(root, ".github", "workflows")).filter((name) => /\.ya?ml$/.test(name)).map((name) => `.github/workflows/${name}`)
   : [];
 if (workflows.length) run("actionlint", "actionlint", workflows);
-if (fs.existsSync(path.join(root, "docker-compose.yml"))) CODE_SERVER_PASSWORD=ci-placeholder-not-for-production run("compose config", "docker", ["compose", "config", "--quiet"]);
-if (fs.existsSync(path.join(root, "docker-bake.hcl"))) CODE_SERVER_PASSWORD=ci-placeholder-not-for-production run("bake print", "docker", ["buildx", "bake", "--print"]);
+if (fs.existsSync(path.join(root, "docker-compose.yml"))) run("compose config", "docker", ["compose", "config", "--quiet"]);
+if (fs.existsSync(path.join(root, "docker-bake.hcl"))) run("bake print", "docker", ["buildx", "bake", "--print"]);
 
 if (failed) process.exitCode = 1;

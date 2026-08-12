@@ -11,6 +11,9 @@ permissions:
 
 env:
   IMAGE: docker.io/jerry0510/ai-dev
+  # Satisfies compose interpolation when bake co-loads docker-compose.yml.
+  # Not a real secret; runtime still requires operators to set a strong password.
+  CODE_SERVER_PASSWORD: ci-placeholder-not-for-production
 
 jobs:
   static:
@@ -21,8 +24,8 @@ jobs:
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
       - run: npm test
       - run: node scripts/check-version-manifest.mjs
-      - run: CODE_SERVER_PASSWORD=ci-placeholder-not-for-production docker compose config --quiet
-      - run: CODE_SERVER_PASSWORD=ci-placeholder-not-for-production docker buildx bake --print
+      - run: docker compose config --quiet
+      - run: docker buildx bake --print
 
   detect-image:
     runs-on: ubuntu-24.04

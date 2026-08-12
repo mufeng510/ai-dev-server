@@ -28,7 +28,7 @@ test("Compose defines the production service without requiring an env file", () 
   assert.match(service, /PUID: \$\{PUID:-1000\}/);
   assert.match(service, /PGID: \$\{PGID:-1000\}/);
   assert.match(service, /TZ: \$\{TZ:-UTC\}/);
-  assert.match(service, /CODE_SERVER_PASSWORD: \$\{CODE_SERVER_PASSWORD:\?set CODE_SERVER_PASSWORD\}/);
+  assert.match(service, /CODE_SERVER_PASSWORD: \$\{CODE_SERVER_PASSWORD:-\}/);
   assert.match(service, /test: \["CMD", "\/usr\/local\/bin\/ai-dev-health"\]/);
   assert.match(service, /^\s+ports:\s*$/m);
   assert.match(service, /"8080:8080"/);
