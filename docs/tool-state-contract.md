@@ -83,6 +83,7 @@ These are absolute for this repository. Do not “temporarily” violate them in
       tmux.conf
       omx-initialized        # recorded OMX package version after first user setup
       gh/                    # GH_CONFIG_DIR
+      code-server/           # code-server --user-data-dir
 ```
 
 Generation ids must remain safe (`ai_dev_safe_generation_id`). Validation must require every **required** tool root directory to exist as a real directory (not a symlink) under the generation.
@@ -123,6 +124,8 @@ Rules:
 | `GH_CONFIG_DIR` | `<generation>/gh` |
 | `GIT_CONFIG_GLOBAL` | `<generation>/git/config` |
 | `ZDOTDIR` | `<generation>/zsh` |
+| `CODE_SERVER_USER_DATA_DIR` | `<generation>/code-server` |
+| `CODE_SERVER_EXTENSIONS_DIR` | `/data/cache/code-server` |
 
 When a new durable tool root is added, extend **both** `ai_dev_export_generation` and `ai_dev_probe_generation_tools` (or the current probe helper) in the same change.
 

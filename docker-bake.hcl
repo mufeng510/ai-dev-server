@@ -65,6 +65,11 @@ variable "CC_SWITCH_AMD64_ASSET" { default = "cc-switch-cli-v5.9.3-linux-x64-mus
 variable "CC_SWITCH_AMD64_SHA256" { default = "a581ec26efda795182949243665ea725d42029c58bb4b9137d0708b255a4fb91" }
 variable "CC_SWITCH_ARM64_ASSET" { default = "cc-switch-cli-v5.9.3-linux-arm64-musl.tar.gz" }
 variable "CC_SWITCH_ARM64_SHA256" { default = "b733f613b32bbb37af3fedd4703c3431da12d346e94bc55af791b134545ebd07" }
+variable "CODE_SERVER_VERSION" { default = "4.132.0" }
+variable "CODE_SERVER_AMD64_ASSET" { default = "code-server-4.132.0-linux-amd64.tar.gz" }
+variable "CODE_SERVER_AMD64_SHA256" { default = "a38d26f4cb81f768feddff79e2937fd3f39c83d3da8be3da7225e1087e62e4ed" }
+variable "CODE_SERVER_ARM64_ASSET" { default = "code-server-4.132.0-linux-arm64.tar.gz" }
+variable "CODE_SERVER_ARM64_SHA256" { default = "ade569a677d1c04ee66ef153382b7e15bf261f955407663c7ddc6b87f9ee29fc" }
 
 group "default" {
   targets = ["image"]
@@ -106,6 +111,11 @@ target "common" {
     CC_SWITCH_AMD64_SHA256    = CC_SWITCH_AMD64_SHA256
     CC_SWITCH_ARM64_ASSET     = CC_SWITCH_ARM64_ASSET
     CC_SWITCH_ARM64_SHA256    = CC_SWITCH_ARM64_SHA256
+    CODE_SERVER_VERSION      = CODE_SERVER_VERSION
+    CODE_SERVER_AMD64_ASSET  = CODE_SERVER_AMD64_ASSET
+    CODE_SERVER_AMD64_SHA256 = CODE_SERVER_AMD64_SHA256
+    CODE_SERVER_ARM64_ASSET  = CODE_SERVER_ARM64_ASSET
+    CODE_SERVER_ARM64_SHA256 = CODE_SERVER_ARM64_SHA256
   }
   labels = {
     "org.opencontainers.image.title"       = "ai-dev"

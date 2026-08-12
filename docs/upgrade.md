@@ -1,5 +1,9 @@
 # Upgrade And Recovery
 
+## Breaking: code-server password required
+
+Images that include always-on code-server **will not start** unless `CODE_SERVER_PASSWORD` is set in the environment or Compose `.env`. Set it before upgrading, then recreate the service. Compose publishes host port `8080` for the IDE.
+
 ## Policy
 
 Tools do not update themselves at runtime. Upgrade by selecting a reviewed image tag or digest. Treat moving tags such as `latest` and `edge` as mutable; pin `X.Y.Z`, `vX.Y.Z`, or an image digest when reproducibility matters.

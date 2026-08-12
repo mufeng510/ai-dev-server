@@ -63,12 +63,19 @@ for root in ${AI_DEV_ROOTS:-/workspace /config /data /logs /models /backups}; do
 done
 dev_can_write "${AI_DEV_CONFIG_ROOT}/generations" || fail mount-inaccessible
 dev_can_write "${AI_DEV_CONFIG_ROOT}/events" || fail mount-inaccessible
-for executable in ai-dev-run ai-dev-idle gosu zsh; do command -v "${executable}" >/dev/null || fail executable-missing; done
+for executable in ai-dev-run ai-dev-idle gosu zsh code-server; do command -v "${executable}" >/dev/null || fail executable-missing; done
 workload_pids="$(pgrep -P 1 || true)"
 [ -n "${workload_pids}" ] || fail workload-not-running
 [ "$(printf '%s\n' "${workload_pids}" | wc -l)" -eq 1 ] || fail workload-not-running
 workload_pid="${workload_pids}"
 workload_uid="$(awk '/^Uid:/ { print $2; exit }' "/proc/${workload_pid}/status" 2>/dev/null || true)"
 [ "${workload_uid}" = "$(id -u dev)" ] || fail workload-not-running
+# Always-on IDE: code-server must be running as a descendant of the workload (not a second PID1 child).
+pgrep -u dev -x code-server >/dev/null 2>&1 || pgrep -u dev -f '[c]ode-server' >/dev/null 2>&1 || fail code-server-not-running
+if command -v ss >/dev/null 2>&1; then
+  ss -ltn | grep -Eq ':8080\s' || fail code-server-port-closed
+elif command -v bash >/dev/null 2>&1; then
+  bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' 2>/dev/null || fail code-server-port-closed
+fi
 [ -S /var/run/docker.sock ] || fail docker-socket-missing
 report healthy "${reason}" 0

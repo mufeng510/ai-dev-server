@@ -5,7 +5,7 @@ if [ "${AI_DEV_RESOLVED:-0}" != 1 ]; then
   exec env AI_DEV_RESOLVED=1 ai-dev-run ai-dev-doctor
 fi
 printf 'generation=%s\n' "${AI_DEV_GENERATION_ID}"
-for tool in claude codex omx omc cc-switch; do
+for tool in claude codex omx omc cc-switch code-server; do
   command -v "${tool}" >/dev/null 2>&1 || { printf '%s: unavailable\n' "${tool}" >&2; exit 1; }
   tool_version="$("${tool}" --version)" || { printf '%s: version check failed\n' "${tool}" >&2; exit 1; }
   printf '%s\n' "${tool_version%%$'\n'*}"

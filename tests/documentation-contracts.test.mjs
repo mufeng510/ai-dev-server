@@ -59,6 +59,8 @@ test("operator documentation covers the required Milestone 7 surface", () => {
     "oh-my-claudecode@omc",
     "omx doctor",
     "cc-switch config path",
+    "code-server",
+    "CODE_SERVER_PASSWORD",
     "ai-dev-migrate",
     "ai-dev-rollback",
     "ai-dev-migrate-identity",

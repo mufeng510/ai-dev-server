@@ -79,7 +79,7 @@ ai_dev_validate_generation() {
   resolved_generation="$(readlink -f "${generation_dir}")" || return 1
   case "${resolved_generation}/" in "${generation_root}/"*) ;; *) return 1 ;; esac
   [ -f "${generation_dir}/schema-version" ] && [ ! -L "${generation_dir}/schema-version" ] || return 1
-  for required in claude codex omc cc-switch git ssh zsh gh; do
+  for required in claude codex omc cc-switch git ssh zsh gh code-server; do
     [ -d "${generation_dir}/${required}" ] && [ ! -L "${generation_dir}/${required}" ] || return 1
   done
 }
@@ -94,7 +94,7 @@ ai_dev_probe_generation_tools() {
     OMC_STATE_DIR="${generation}/omc" CC_SWITCH_CONFIG_DIR="${generation}/cc-switch" \
     GH_CONFIG_DIR="${generation}/gh" \
     GIT_CONFIG_GLOBAL="${generation}/git/config" ZDOTDIR="${generation}/zsh" \
-    bash -lc 'claude --version >/dev/null && codex --version >/dev/null && omc --version >/dev/null && omx --version >/dev/null && cc-switch config validate >/dev/null && gh --version >/dev/null && git --version >/dev/null && ssh -V >/dev/null 2>&1 && zsh --version >/dev/null'
+    bash -lc 'claude --version >/dev/null && codex --version >/dev/null && omc --version >/dev/null && omx --version >/dev/null && cc-switch config validate >/dev/null && gh --version >/dev/null && git --version >/dev/null && ssh -V >/dev/null 2>&1 && zsh --version >/dev/null && code-server --version >/dev/null'
 }
 
 ai_dev_secure_state() {
@@ -120,6 +120,8 @@ ai_dev_export_generation() {
   export GH_CONFIG_DIR="${AI_DEV_GENERATION}/gh"
   export GIT_CONFIG_GLOBAL="${AI_DEV_GENERATION}/git/config"
   export ZDOTDIR="${AI_DEV_GENERATION}/zsh"
+  export CODE_SERVER_USER_DATA_DIR="${AI_DEV_GENERATION}/code-server"
+  export CODE_SERVER_EXTENSIONS_DIR="/data/cache/code-server"
 }
 
 ai_dev_sync_path() {

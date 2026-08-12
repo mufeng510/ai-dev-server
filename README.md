@@ -56,6 +56,7 @@ The image is built from a digest-pinned Ubuntu 24.04 base, supports amd64 and ar
 | AI tools | [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex) | 2.1.221, 0.146.0 |
 | AI orchestration | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) | 4.15.7, 0.20.3 |
 | Claude provider tool | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3 Linux musl CLI |
+| Browser IDE | [code-server](https://github.com/coder/code-server) | 4.132.0 (always-on at port 8080; requires `CODE_SERVER_PASSWORD`) |
 | Development tools | [Git](https://github.com/git/git), [Git LFS](https://github.com/git-lfs/git-lfs), [OpenSSH client](https://github.com/openssh/openssh-portable), [tmux](https://github.com/tmux/tmux), [Zsh](https://github.com/zsh-users/zsh), [Bash](https://github.com/bminor/bash), [GCC](https://github.com/gcc-mirror/gcc), [Clang](https://github.com/llvm/llvm-project), [CMake](https://github.com/Kitware/CMake), [make](https://github.com/mirror/make), [pkg-config](https://github.com/pkgconf/pkgconf) | Installed from Ubuntu repositories |
 | Command-line tools | [`curl`](https://github.com/curl/curl), [`wget`](https://www.gnu.org/software/wget/), [`jq`](https://github.com/jqlang/jq), [`yq`](https://github.com/mikefarah/yq) 4.47.1, [`rg`](https://github.com/BurntSushi/ripgrep), [`fd`](https://github.com/sharkdp/fd), [`fzf`](https://github.com/junegunn/fzf), [`sqlite3`](https://github.com/sqlite/sqlite), [ShellCheck](https://github.com/koalaman/shellcheck) | `fd` is a compatibility alias for `fdfind` |
 
@@ -75,6 +76,24 @@ Compose creates exactly six named volumes:
 | `backups` | `/backups` | In-container backups and migration metadata |
 
 The Compose project name is `ai-dev`, so Docker normally names these volumes `ai-dev_workspace`, `ai-dev_config`, and so on. Do not use `docker compose down -v` unless you intend to delete all persistent state.
+
+## Browser IDE (code-server)
+
+code-server is preinstalled and starts automatically with the container on `0.0.0.0:8080`.
+
+1. Set a strong password in the environment or a gitignored `.env` next to Compose:
+
+```bash
+export CODE_SERVER_PASSWORD='replace-with-a-strong-password'
+```
+
+Compose requires the variable (`${CODE_SERVER_PASSWORD:?...}`). Starting without it fails closed.
+
+2. Publish is already declared as `8080:8080` in `docker-compose.yml`.
+3. Open `http://<host>:8080` and sign in with that password.
+4. User settings persist in the active `/config` generation (`code-server/`). Extension cache lives under `/data/cache/code-server`.
+
+This is a **breaking change** for older deployments: image upgrades that include code-server will not start until `CODE_SERVER_PASSWORD` is set. Prefer a reverse proxy with TLS in front of port 8080 on any non-loopback network.
 
 ## Use The Environment
 

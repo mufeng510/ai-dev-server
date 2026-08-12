@@ -1,27 +1,101 @@
 #!/usr/bin/env bash
 set -euo pipefail
 . /usr/local/libexec/ai-dev-runtime
+
+ai_dev_export_generation || {
+  printf 'ai-dev-idle: active generation is unavailable\n' >&2
+  exit 1
+}
+
+password="${CODE_SERVER_PASSWORD:-}"
+if [ -z "${password}" ]; then
+  printf 'ai-dev-idle: CODE_SERVER_PASSWORD is required to start code-server\n' >&2
+  exit 1
+fi
+
+user_data_dir="${CODE_SERVER_USER_DATA_DIR:-${AI_DEV_GENERATION}/code-server}"
+extensions_dir="${CODE_SERVER_EXTENSIONS_DIR:-/data/cache/code-server}"
+bind_addr="${CODE_SERVER_BIND_ADDR:-0.0.0.0:8080}"
+workspace="${CODE_SERVER_WORKSPACE:-/workspace}"
+
+install -d -m 0700 "${user_data_dir}" "${extensions_dir}"
+
 operation_id="$(ai_dev_new_operation)"
 ai_dev_event "${operation_id}" workload.ready info workload-ready
+
+code_server_pid=""
 exit_code=0
+
+start_code_server() {
+  # Password is passed only via environment, never argv.
+  PASSWORD="${password}" \
+  CS_DISABLE_FILE_DOWNLOADS="${CS_DISABLE_FILE_DOWNLOADS:-}" \
+    code-server \
+      --auth password \
+      --bind-addr "${bind_addr}" \
+      --user-data-dir "${user_data_dir}" \
+      --extensions-dir "${extensions_dir}" \
+      --disable-telemetry \
+      --disable-update-check \
+      "${workspace}" &
+  code_server_pid="$!"
+  ai_dev_event "${operation_id}" code-server.started info code-server-started bind_addr "${bind_addr}"
+}
+
 shutdown() {
-  signal="$1" exit_code="$2"
+  signal="$1"
+  exit_code="$2"
   trap - TERM INT
   ai_dev_event "${operation_id}" signal.received info signal-received signal "${signal}"
   ai_dev_event "${operation_id}" shutdown.started info shutdown-started signal "${signal}"
+  if [ -n "${code_server_pid}" ] && kill -0 "${code_server_pid}" 2>/dev/null; then
+    kill -TERM "${code_server_pid}" 2>/dev/null || true
+  fi
   jobs -pr | xargs -r kill -TERM 2>/dev/null || true
   wait || true
   ai_dev_event "${operation_id}" shutdown.completed info shutdown-completed signal "${signal}"
   ai_dev_event "${operation_id}" operation.completed info operation-completed
   exit "${exit_code}"
 }
+
 trap 'shutdown TERM 0' TERM
 trap 'shutdown INT 130' INT
+
+start_code_server
+
+# Keep a long-lived child so the container stays up while code-server runs.
 sleep infinity &
-child_pid="$!"
+keeper_pid="$!"
+
 set +e
-wait "${child_pid}"
-exit_code="$?"
+while true; do
+  if ! kill -0 "${code_server_pid}" 2>/dev/null; then
+    wait "${code_server_pid}"
+    exit_code=$?
+    ai_dev_event "${operation_id}" code-server.exited error code-server-exited state failed
+    ai_dev_event "${operation_id}" operation.failed error workload-exited state failed
+    kill -TERM "${keeper_pid}" 2>/dev/null || true
+    wait "${keeper_pid}" 2>/dev/null || true
+    exit "${exit_code}"
+  fi
+  if ! kill -0 "${keeper_pid}" 2>/dev/null; then
+    wait "${keeper_pid}"
+    exit_code=$?
+    break
+  fi
+  # Wait briefly for either child without busy-spinning.
+  wait -n "${code_server_pid}" "${keeper_pid}" 2>/dev/null
+  wait_rc=$?
+  # If wait -n is unsupported, fall back to sleep poll.
+  if [ "${wait_rc}" -eq 127 ] || [ "${wait_rc}" -eq 2 ]; then
+    sleep 2
+  fi
+done
 set -e
+
 ai_dev_event "${operation_id}" operation.failed error workload-exited state failed
+if [ -n "${code_server_pid}" ] && kill -0 "${code_server_pid}" 2>/dev/null; then
+  kill -TERM "${code_server_pid}" 2>/dev/null || true
+  wait "${code_server_pid}" 2>/dev/null || true
+fi
 exit "${exit_code}"

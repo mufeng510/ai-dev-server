@@ -24,6 +24,11 @@ services:
       PGID: ${PGID:-1000}
       # Controls timezone data and timestamps emitted by tools in the container.
       TZ: ${TZ:-UTC}
+      # Required password for always-on code-server (fail closed when unset).
+      CODE_SERVER_PASSWORD: ${CODE_SERVER_PASSWORD:?set CODE_SERVER_PASSWORD}
+    ports:
+      # Browser IDE (code-server). Password auth is mandatory.
+      - "8080:8080"
     volumes:
       # Persistent state is intentionally separate from the immutable image.
       - workspace:/workspace

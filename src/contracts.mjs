@@ -25,7 +25,12 @@ export const REQUIRED_VERSION_KEYS = Object.freeze([
   "CC_SWITCH_AMD64_ASSET",
   "CC_SWITCH_AMD64_SHA256",
   "CC_SWITCH_ARM64_ASSET",
-  "CC_SWITCH_ARM64_SHA256"
+  "CC_SWITCH_ARM64_SHA256",
+  "CODE_SERVER_VERSION",
+  "CODE_SERVER_AMD64_ASSET",
+  "CODE_SERVER_AMD64_SHA256",
+  "CODE_SERVER_ARM64_ASSET",
+  "CODE_SERVER_ARM64_SHA256"
 ]);
 
 export function parseEnv(text) {
@@ -63,7 +68,16 @@ export function validateVersionManifest(values) {
     if (!asset.includes("musl")) errors.push(`CC_SWITCH_${architecture}_ASSET must select musl`);
     if (!/^[a-f0-9]{64}$/.test(checksum)) errors.push(`CC_SWITCH_${architecture}_SHA256 must be sha256`);
   }
-  for (const key of ["CLAUDE_AMD64_SHA256", "CLAUDE_ARM64_SHA256", "CODEX_INSTALLER_SHA256", "GH_AMD64_SHA256", "GH_ARM64_SHA256"]) {
+  for (const architecture of ["AMD64", "ARM64"]) {
+    const asset = values[`CODE_SERVER_${architecture}_ASSET`] ?? "";
+    const checksum = values[`CODE_SERVER_${architecture}_SHA256`] ?? "";
+    const archToken = architecture === "AMD64" ? "amd64" : "arm64";
+    if (values.CODE_SERVER_VERSION && !asset.includes(`code-server-${values.CODE_SERVER_VERSION}-linux-${archToken}.tar.gz`)) {
+      errors.push(`CODE_SERVER_${architecture}_ASSET must be version-qualified linux ${archToken} tarball`);
+    }
+    if (!/^[a-f0-9]{64}$/.test(checksum)) errors.push(`CODE_SERVER_${architecture}_SHA256 must be sha256`);
+  }
+  for (const key of ["CLAUDE_AMD64_SHA256", "CLAUDE_ARM64_SHA256", "CODEX_INSTALLER_SHA256", "GH_AMD64_SHA256", "GH_ARM64_SHA256", "CODE_SERVER_AMD64_SHA256", "CODE_SERVER_ARM64_SHA256"]) {
     if (!/^[a-f0-9]{64}$/.test(values[key] ?? "")) errors.push(`${key} must be sha256`);
   }
   return errors;

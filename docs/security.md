@@ -14,8 +14,13 @@ The public image contains no user credentials. Authentication is manual and pers
 - SSH private keys and Git credential configuration
 - OMC/OMX user configuration
 - cc-switch provider keys, OAuth refresh tokens, WebDAV credentials, database files, and backups
+- code-server password (`CODE_SERVER_PASSWORD`) and IDE session state under the active generation
 
 Never commit secrets, add them to Compose, pass them as Docker build arguments, or include raw configuration in an issue. Do not include the cc-switch subtree in a support bundle. Review `/logs` before sharing it even though structured events redact known secret patterns.
+
+## Browser IDE (code-server)
+
+code-server listens on `0.0.0.0:8080` with password authentication. `CODE_SERVER_PASSWORD` must be supplied by the operator through the host environment or a gitignored `.env`; it is never baked into the image and must not be committed. Password auth on a published port is weaker than loopback-only access: treat the Docker host as single-user trusted, use a strong password, and prefer TLS termination on a reverse proxy for any remote exposure. The password is passed to code-server only through the process environment, not argv or logs.
 
 ## Operational Controls
 

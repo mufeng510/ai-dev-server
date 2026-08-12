@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）及 SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
+`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）、SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) 与 [code-server](https://github.com/coder/code-server)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
 
 ## 安全警告
 
@@ -51,6 +51,7 @@ PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
 | AI 工具 | [Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex) | 2.1.221、0.146.0 |
 | AI 编排 | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) | 4.15.7、0.20.3 |
 | Claude 提供方工具 | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3（Linux musl CLI） |
+| 浏览器 IDE | [code-server](https://github.com/coder/code-server) | 4.132.0（常驻监听 8080；必须设置 `CODE_SERVER_PASSWORD`） |
 | 常用开发工具 | [Git](https://github.com/git/git)、[Git LFS](https://github.com/git-lfs/git-lfs)、[OpenSSH client](https://github.com/openssh/openssh-portable)、[tmux](https://github.com/tmux/tmux)、[Zsh](https://github.com/zsh-users/zsh)、[Bash](https://github.com/bminor/bash)、[GCC](https://github.com/gcc-mirror/gcc)、[Clang](https://github.com/llvm/llvm-project)、[CMake](https://github.com/Kitware/CMake)、[make](https://github.com/mirror/make)、[pkg-config](https://github.com/pkgconf/pkgconf) | 来自 Ubuntu 软件源 |
 | 常用命令行工具 | [`curl`](https://github.com/curl/curl)、[`wget`](https://www.gnu.org/software/wget/)、[`jq`](https://github.com/jqlang/jq)、[`yq`](https://github.com/mikefarah/yq) 4.47.1、[`rg`](https://github.com/BurntSushi/ripgrep)、[`fd`](https://github.com/sharkdp/fd)、[`fzf`](https://github.com/junegunn/fzf)、[`sqlite3`](https://github.com/sqlite/sqlite)、[ShellCheck](https://github.com/koalaman/shellcheck) | `fd` 是 `fdfind` 的兼容别名 |
 
@@ -68,6 +69,24 @@ Compose 会创建六个命名卷。项目名为 `ai-dev`，卷通常命名为 `a
 | `logs` | `/logs` | 运行事件和可选工具日志 |
 | `models` | `/models` | 下载或本地模型文件 |
 | `backups` | `/backups` | 容器内备份和迁移元数据 |
+
+## 浏览器 IDE（code-server）
+
+镜像预装 code-server，容器启动后常驻监听 `0.0.0.0:8080`。
+
+1. 在环境变量或 Compose 同目录的 `.env`（勿提交）中设置强密码：
+
+```bash
+export CODE_SERVER_PASSWORD='replace-with-a-strong-password'
+```
+
+Compose 使用 `${CODE_SERVER_PASSWORD:?...}` **强制**提供该变量；未设置时启动失败（fail closed）。
+
+2. `docker-compose.yml` 已发布 `8080:8080`。
+3. 浏览器打开 `http://<主机>:8080`，使用上述密码登录。
+4. 用户设置保存在当前 `/config` 配置代的 `code-server/`；扩展缓存位于 `/data/cache/code-server`。
+
+这是对旧部署的 **破坏性变更**：包含 code-server 的镜像升级在设置 `CODE_SERVER_PASSWORD` 之前无法启动。非本机回环网络前请优先加 TLS 反向代理。
 
 ## 使用环境
 

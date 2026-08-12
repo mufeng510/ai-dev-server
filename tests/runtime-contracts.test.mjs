@@ -85,9 +85,11 @@ test("generation resolver fails closed and exports every tool state root", () =>
     "CODEX_HOME=",
     "OMC_STATE_DIR=",
     "CC_SWITCH_CONFIG_DIR=",
-    "GH_CONFIG_DIR="
+    "GH_CONFIG_DIR=",
+    "CODE_SERVER_USER_DATA_DIR=",
+    "CODE_SERVER_EXTENSIONS_DIR="
   ]);
-  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh/);
+  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh code-server/);
 });
 
 test("supported shell and exec paths always route through ai-dev-run", () => {
@@ -102,6 +104,26 @@ test("supported shell and exec paths always route through ai-dev-run", () => {
   assert.match(containerShell, /id -u dev/);
   assert.match(containerShell, /Docker Socket group access/);
   assert.match(containerShell, /exec ai-dev-run zsh -l/);
+});
+
+test("idle supervises always-on code-server with required password and generation paths", () => {
+  const idle = read("scripts/ai-dev-idle");
+  const health = read("scripts/ai-dev-health");
+  const entrypoint = read("entrypoint.sh");
+
+  assert.match(idle, /CODE_SERVER_PASSWORD/);
+  assert.match(idle, /code-server/);
+  assert.match(idle, /--bind-addr/);
+  assert.match(idle, /0\.0\.0\.0:8080/);
+  assert.match(idle, /CODE_SERVER_USER_DATA_DIR|user-data-dir/);
+  assert.match(idle, /CODE_SERVER_EXTENSIONS_DIR|extensions-dir/);
+  assert.match(idle, /--disable-update-check/);
+  assert.doesNotMatch(idle, /PASSWORD=changeme|password123/i);
+
+  assert.match(health, /code-server-not-running/);
+  assert.match(health, /code-server-port-closed|8080/);
+  assert.match(entrypoint, /code-server/);
+  assert.match(entrypoint, /for cache in[^\n]*code-server/);
 });
 
 test("image lifecycle keeps root bootstrap and drops the final workload through tini and gosu", () => {
