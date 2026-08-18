@@ -60,6 +60,7 @@ test("operator documentation covers the required Milestone 7 surface", () => {
     "omx doctor",
     "oh-my-openagent doctor",
     "scripts/exec opencode",
+    "scripts/exec grok",
     "cc-switch config path",
     "code-server",
     "CODE_SERVER_PASSWORD",

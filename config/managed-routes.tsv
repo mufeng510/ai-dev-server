@@ -9,3 +9,4 @@
 .config/opencode	opencode
 .omo	omo
 .local/share/opencode	opencode-data
+.grok	grok

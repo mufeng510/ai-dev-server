@@ -134,7 +134,7 @@ if [ ! -e "${AI_DEV_POINTER}" ]; then
   generation_id=g000001
   generation="${AI_DEV_GENERATIONS}/${generation_id}"
   install -d -o dev -g dev -m 0700 "${generation}"
-  for directory in claude omc cc-switch git ssh zsh gh code-server opencode omo opencode-data; do install -d -o dev -g dev -m 0700 "${generation}/${directory}"; done
+  for directory in claude omc cc-switch git ssh zsh gh code-server opencode omo opencode-data grok; do install -d -o dev -g dev -m 0700 "${generation}/${directory}"; done
   printf '%s\n' "${AI_DEV_CONFIG_SCHEMA:-1}" | ai_dev_atomic_write "${generation}/schema-version" 0600
   [ -e "${generation}/zsh/.zshrc" ] || install -m 0600 "${AI_DEV_DEFAULTS_DIR}/zshrc" "${generation}/zsh/.zshrc"
   [ -e "${generation}/tmux.conf" ] || install -m 0600 "${AI_DEV_DEFAULTS_DIR}/tmux.conf" "${generation}/tmux.conf"
@@ -179,6 +179,7 @@ install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/code-server"
 install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/opencode"
 install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/omo"
 install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/opencode-data"
+install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/grok"
 installed_omo_version="$(node -p "require('/usr/local/lib/node_modules/oh-my-openagent/package.json').version")"
 [ -n "${installed_omo_version}" ] || fail 'oh-my-openagent did not report an installed version'
 if [ ! -e "${AI_DEV_GENERATION}/opencode-omo-initialized" ]; then
@@ -188,8 +189,9 @@ if [ ! -e "${AI_DEV_GENERATION}/opencode-omo-initialized" ]; then
   chown "${PUID}:${PGID}" "${AI_DEV_GENERATION}/opencode-omo-initialized"
 fi
 ai_dev_validate_generation "${AI_DEV_GENERATION_ID}" || fail 'active generation is incomplete or unsafe'
-chmod 0700 "${AI_DEV_GENERATION}/claude" "${AI_DEV_GENERATION}/codex" "${AI_DEV_GENERATION}/omc" "${AI_DEV_GENERATION}/ssh" "${AI_DEV_GENERATION}/gh" "${AI_DEV_GENERATION}/opencode" "${AI_DEV_GENERATION}/omo" "${AI_DEV_GENERATION}/opencode-data"
+chmod 0700 "${AI_DEV_GENERATION}/claude" "${AI_DEV_GENERATION}/codex" "${AI_DEV_GENERATION}/omc" "${AI_DEV_GENERATION}/ssh" "${AI_DEV_GENERATION}/gh" "${AI_DEV_GENERATION}/opencode" "${AI_DEV_GENERATION}/omo" "${AI_DEV_GENERATION}/opencode-data" "${AI_DEV_GENERATION}/grok"
 ai_dev_secure_state "${AI_DEV_GENERATION}/cc-switch" || fail 'cc-switch state has unsafe permissions'
+ai_dev_secure_state "${AI_DEV_GENERATION}/grok" || fail 'grok state has unsafe permissions'
 find "${AI_DEV_GENERATION}/ssh" -xdev -type f -exec chmod 0600 {} +
 [ ! -f "${AI_DEV_GENERATION}/codex/auth.json" ] || chmod 0600 "${AI_DEV_GENERATION}/codex/auth.json"
 ai_dev_secure_state "${AI_DEV_BACKUP_ROOT}" || fail 'backup state has unsafe permissions'
@@ -254,7 +256,7 @@ fi
 
 git config --file "${AI_DEV_GENERATION}/git/config" user.name >/dev/null 2>&1 || printf '%s\n' 'entrypoint: Git identity is not configured (no identity was created)' >&2
 find "${AI_DEV_GENERATION}/ssh" -mindepth 1 -maxdepth 1 -type f -print -quit | grep -q . || printf '%s\n' 'entrypoint: no SSH keys are configured (no key was created)' >&2
-for tool in claude codex omx omc cc-switch opencode oh-my-openagent; do
+for tool in claude codex omx omc cc-switch opencode oh-my-openagent grok; do
   command -v "${tool}" >/dev/null 2>&1 || fail "required tool is unavailable: ${tool}"
 done
 cc_switch_path="$(gosu dev:dev ai-dev-run cc-switch config path | sed -n 's/^Config dir:[[:space:]]*//p')" || fail 'cc-switch configuration path cannot be resolved'
@@ -268,6 +270,11 @@ gosu dev:dev ai-dev-run claude auth status --json >/dev/null 2>&1 ||
   printf '%s\n' 'entrypoint: Claude is not authenticated (no login was started)' >&2
 gosu dev:dev ai-dev-run codex login status >/dev/null 2>&1 ||
   printf '%s\n' 'entrypoint: Codex is not authenticated (no login was started)' >&2
+if [ -f "${AI_DEV_GENERATION}/grok/auth.json" ]; then
+  printf '%s\n' 'entrypoint: Grok auth material is present' >&2
+else
+  printf '%s\n' 'entrypoint: Grok is not authenticated (no login was started)' >&2
+fi
 
 printf 'operation_id=%s\ngeneration=%s\nstate=complete\n' "${startup_operation}" "${AI_DEV_GENERATION_ID}" |
   ai_dev_atomic_write "${AI_DEV_CONFIG_ROOT}/initialized" 0600

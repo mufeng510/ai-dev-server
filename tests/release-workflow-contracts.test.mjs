@@ -185,6 +185,7 @@ test("native capability gate rejects an emulated host and validates offline stat
   assert.doesNotMatch(gate, /cc-switch auth status --json[^\n]*\|\| true/);
   assert.match(gate, /omx setup/);
   assert.match(gate, /assert_version opencode/);
+  assert.match(gate, /assert_version grok/);
   assert.match(gate, /oh-my-openagent version/);
   assert.match(gate, /oh-my-openagent/);
   assert.match(gate, /Results: \[0-9\]\+ passed/);

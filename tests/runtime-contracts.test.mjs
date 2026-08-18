@@ -92,7 +92,7 @@ test("generation resolver fails closed and exports every tool state root", () =>
     "OMO_DISABLE_POSTHOG=1",
     "OMO_SEND_ANONYMOUS_TELEMETRY=0"
   ]);
-  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh code-server opencode omo opencode-data/);
+  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh code-server opencode omo opencode-data grok/);
 });
 
 test("supported shell and exec paths always route through ai-dev-run", () => {
@@ -162,7 +162,7 @@ test("bootstrap does not automate identity, authentication, providers, proxy, sy
     /cc-switch\s+provider\s+(?:add|remove|set|update)/i,
     /cc-switch\s+proxy\s+(?:enable|start)/i,
     /cc-switch\s+sync/i,
-    /(?:claude|codex|omc|omx|cc-switch|opencode|oh-my-openagent|oh-my-opencode|omo-agent-toolkit)\s+(?:self-)?update/i,
+    /(?:claude|codex|omc|omx|cc-switch|opencode|oh-my-openagent|oh-my-opencode|omo-agent-toolkit|grok)\s+(?:self-)?update/i,
     /ssh-keygen/i,
     /git\s+config\s+(?:--global\s+)?user\.(?:name|email)/i
   ]) {
@@ -246,6 +246,11 @@ test("official native installers remain pinned and noninteractive", () => {
   assert.doesNotMatch(installer, /omo-ai@beta/);
   assert.doesNotMatch(installer, /lazycodex-ai/);
   assert.doesNotMatch(installer, /--platform=codex/);
+  assert.match(installer, /https:\/\/x\.ai\/cli/);
+  assert.match(installer, /GROK_RELEASE_BASE_URL/);
+  assert.match(installer, /grok-\$\{GROK_VERSION\}-linux-x86_64/);
+  assert.match(installer, /grok-\$\{GROK_VERSION\}-linux-aarch64/);
+  assert.doesNotMatch(installer, /x\.ai\/cli\/install\.sh/);
 });
 
 test("readiness and doctor validate active cc-switch state and report auth only", () => {
@@ -276,7 +281,7 @@ test("migration and rollback preserve a single atomic generation pointer commit"
   assert.match(rollback, /recovery\.started/);
   assert.match(rollback, /recovery\.completed/);
   assert.match(runtime, /ai_dev_probe_generation_tools/);
-  for (const tool of ["claude", "codex", "omc", "omx", "cc-switch", "opencode", "oh-my-openagent", "gh", "git", "ssh", "zsh"]) {
+  for (const tool of ["claude", "codex", "omc", "omx", "cc-switch", "opencode", "oh-my-openagent", "grok", "gh", "git", "ssh", "zsh"]) {
     assert.match(runtime, new RegExp(`${tool}.*--version|${tool} version|${tool} config validate`));
   }
   assert.match(migration, /ai_dev_probe_generation_tools/);

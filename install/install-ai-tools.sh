@@ -4,6 +4,7 @@ set -eu
 
 readonly CLAUDE_RELEASE_BASE_URL="https://github.com/anthropics/claude-code/releases/download"
 readonly OPENCODE_RELEASE_BASE_URL="https://github.com/anomalyco/opencode/releases/download"
+readonly GROK_RELEASE_BASE_URL="https://x.ai/cli"
 readonly CODEX_INSTALLER_URL="https://chatgpt.com/codex/install.sh"
 readonly CC_SWITCH_REPOSITORY="SaladDay/cc-switch-cli"
 
@@ -67,6 +68,20 @@ install_opencode() {
   binary="$(single_extracted_file "$extract_dir" opencode)"
   install -m 0755 "$binary" "$INSTALL_PREFIX/bin/opencode"
   "$INSTALL_PREFIX/bin/opencode" --version | grep -F "$OPENCODE_VERSION" >/dev/null || fail "OpenCode version verification failed"
+}
+
+install_grok() {
+  case "$TARGETARCH" in
+    amd64) grok_asset=grok-${GROK_VERSION}-linux-x86_64; grok_checksum=$GROK_AMD64_SHA256 ;;
+    arm64) grok_asset=grok-${GROK_VERSION}-linux-aarch64; grok_checksum=$GROK_ARM64_SHA256 ;;
+    *) fail "unsupported TARGETARCH for Grok Build: $TARGETARCH" ;;
+  esac
+  binary="$work_dir/$grok_asset"
+  fetch "$GROK_RELEASE_BASE_URL/$grok_asset" "$binary"
+  verify_sha256 "$binary" "$grok_checksum"
+  install -m 0755 "$binary" "$INSTALL_PREFIX/bin/grok"
+  ln -sf grok "$INSTALL_PREFIX/bin/agent"
+  "$INSTALL_PREFIX/bin/grok" --version | grep -F "$GROK_VERSION" >/dev/null || fail "Grok Build version verification failed"
 }
 
 install_claude() {
@@ -151,6 +166,9 @@ for variable in \
   OPENCODE_AMD64_SHA256 \
   OPENCODE_ARM64_SHA256 \
   OMO_VERSION \
+  GROK_VERSION \
+  GROK_AMD64_SHA256 \
+  GROK_ARM64_SHA256 \
   CC_SWITCH_VERSION \
   CC_SWITCH_AMD64_ASSET \
   CC_SWITCH_AMD64_SHA256 \
@@ -190,5 +208,6 @@ mkdir -p "$INSTALL_PREFIX/bin"
 install_claude
 install_codex
 install_opencode
+install_grok
 install_node_tools
 install_cc_switch

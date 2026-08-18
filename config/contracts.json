@@ -68,6 +68,10 @@
     {
       "homePath": ".local/share/opencode",
       "generationPath": "opencode-data"
+    },
+    {
+      "homePath": ".grok",
+      "generationPath": "grok"
     }
   ],
   "stateMachines": {
@@ -81,6 +85,7 @@
       "setup-opencode-omo",
       "verify-omc",
       "verify-cc-switch",
+      "verify-grok",
       "ready"
     ],
     "identityMigration": [
