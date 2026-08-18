@@ -44,6 +44,7 @@ docker run --rm --entrypoint bash "$image_ref" -lc '
   assert_version omc "$OMC_VERSION"
   assert_version omx "$OMX_VERSION"
   assert_version opencode "$OPENCODE_VERSION"
+  assert_version grok "$GROK_VERSION"
   temp=$(mktemp -d)
   trap '\''rm -rf "$temp"'\'' EXIT
   export HOME="$temp/home" CC_SWITCH_CONFIG_DIR="$temp/cc-switch"

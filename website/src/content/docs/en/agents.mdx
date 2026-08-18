@@ -47,6 +47,14 @@ scripts/exec oh-my-openagent doctor
 
 Authenticate in the OpenCode TUI. User config persists through `OPENCODE_CONFIG_DIR`. First boot registers the Ultimate oh-my-openagent plugin offline and disables telemetry. Codex Light edition is not installed.
 
+## Grok Build
+
+```bash
+scripts/exec grok
+```
+
+Pinned xAI Grok Build CLI. Authenticate in the TUI after start. State persists in `<generation>/grok` (`~/.grok`). Do not run `grok login` at container boot.
+
 ## cc-switch-cli
 
 The image contains the pinned headless TUI/scriptable CLI from SaladDay — not the similarly named desktop GUI.

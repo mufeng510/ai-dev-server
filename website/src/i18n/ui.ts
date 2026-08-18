@@ -36,7 +36,7 @@ const en = {
     "Ubuntu 24.04 for linux/amd64 and linux/arm64. Upgrades come from reviewed image tags — not runtime self-update.",
   "features.2.title": "AI coding CLIs ready",
   "features.2.body":
-    "Claude Code, Codex CLI, OpenCode, Oh My ClaudeCode (OMC), Oh My Codex (OMX), Oh My OpenAgent, and SaladDay cc-switch-cli are preinstalled.",
+    "Claude Code, Codex CLI, OpenCode, Grok Build, Oh My ClaudeCode (OMC), Oh My Codex (OMX), Oh My OpenAgent, and SaladDay cc-switch-cli are preinstalled.",
   "features.3.title": "Persistent named volumes",
   "features.3.body":
     "Projects, credentials, caches, logs, models, and backups live in six named volumes that survive container recreate.",
@@ -95,6 +95,9 @@ const en = {
   "agents.7.name": "Oh My OpenAgent",
   "agents.7.body":
     "Ultimate OpenCode plugin, registered offline on first boot. Verify with scripts/exec oh-my-openagent doctor. Codex Light is not installed.",
+  "agents.8.name": "Grok Build",
+  "agents.8.body":
+    "Pinned xAI grok CLI from grok.com/build. Authenticate after start with scripts/exec grok. State lives in the active generation under ~/.grok.",
   "quick.title": "Get started in minutes.",
   "quick.subtitlePrefix": "Prerequisites: Linux Docker host, Docker Engine, Compose v2, working /var/run/docker.sock, amd64 or arm64. Default image:",
   "quick.step1": "1. Clone",
@@ -126,7 +129,7 @@ const en = {
     "The image stays immutable while projects and credentials live in volumes. You can recreate the container, pin versions, and keep a consistent toolchain without polluting the host user environment.",
   "faq.3.q": "Which AI coding agents are supported?",
   "faq.3.a":
-    "The image preinstalls Claude Code, Codex CLI, OpenCode, Oh My ClaudeCode (OMC), Oh My Codex (OMX), Oh My OpenAgent, and SaladDay cc-switch-cli. Authentication is manual and persists in the active /config generation.",
+    "The image preinstalls Claude Code, Codex CLI, OpenCode, Grok Build, Oh My ClaudeCode (OMC), Oh My Codex (OMX), Oh My OpenAgent, and SaladDay cc-switch-cli. Authentication is manual and persists in the active /config generation.",
   "faq.4.q": "Can I run it on a NAS?",
   "faq.4.a":
     "If the NAS provides a Linux Docker Engine, Compose v2, and a usable docker.sock on amd64/arm64, yes — under the same trusted single-user security model.",
@@ -210,7 +213,7 @@ const zh: Dictionary = {
     "基于 Ubuntu 24.04，支持 linux/amd64 与 linux/arm64。升级通过审阅后的镜像标签完成，而不是运行时自更新。",
   "features.2.title": "AI 编程 CLI 就绪",
   "features.2.body":
-    "预装 Claude Code、Codex CLI、OpenCode、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）、Oh My OpenAgent 与 SaladDay cc-switch-cli。",
+    "预装 Claude Code、Codex CLI、OpenCode、Grok Build、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）、Oh My OpenAgent 与 SaladDay cc-switch-cli。",
   "features.3.title": "持久化命名卷",
   "features.3.body":
     "项目、凭据、缓存、日志、模型与备份保存在六个命名卷中，容器重建后仍然保留。",
@@ -268,6 +271,9 @@ const zh: Dictionary = {
   "agents.7.name": "Oh My OpenAgent",
   "agents.7.body":
     "OpenCode Ultimate 插件，首次启动离线注册。用 scripts/exec oh-my-openagent doctor 检查。未安装 Codex Light。",
+  "agents.8.name": "Grok Build",
+  "agents.8.body":
+    "来自 grok.com/build 的锁定版 xAI grok CLI。启动后用 scripts/exec grok 登录。状态在当前配置代的 ~/.grok。",
   "quick.title": "几分钟即可开始。",
   "quick.subtitlePrefix":
     "前提：Linux Docker 主机、Docker Engine、Compose v2、可用 /var/run/docker.sock、amd64 或 arm64。默认镜像：",
@@ -298,7 +304,7 @@ const zh: Dictionary = {
     "镜像保持不可变，项目与凭据放在卷中。你可以重建容器、固定版本，并获得一致工具链，而不污染宿主机用户环境。",
   "faq.3.q": "支持哪些 AI 编程工具？",
   "faq.3.a":
-    "镜像预装 Claude Code、Codex CLI、OpenCode、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）、Oh My OpenAgent 与 SaladDay cc-switch-cli。认证需手动完成，并持久化在当前 /config 配置代中。",
+    "镜像预装 Claude Code、Codex CLI、OpenCode、Grok Build、Oh My ClaudeCode（OMC）、Oh My Codex（OMX）、Oh My OpenAgent 与 SaladDay cc-switch-cli。认证需手动完成，并持久化在当前 /config 配置代中。",
   "faq.4.q": "可以在 NAS 上运行吗？",
   "faq.4.a":
     "若 NAS 提供 Linux Docker Engine、Compose v2，以及 amd64/arm64 上可用的 docker.sock，可以——前提是遵循同一套可信单用户安全模型。",

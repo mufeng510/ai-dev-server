@@ -44,6 +44,14 @@ scripts/exec oh-my-openagent doctor
 
 在 OpenCode TUI 中登录。用户配置通过 `OPENCODE_CONFIG_DIR` 持久化。首次启动会离线注册 Ultimate oh-my-openagent 插件并关闭遥测。未安装 Codex Light。
 
+## Grok Build
+
+```bash
+scripts/exec grok
+```
+
+锁定版本的 xAI Grok Build CLI。启动后在 TUI 中登录。状态持久化在 `<generation>/grok`（`~/.grok`）。容器启动不会执行 `grok login`。
+
 ## cc-switch-cli
 
 镜像包含 SaladDay 无头 TUI/可脚本 CLI，不是同名桌面 GUI。

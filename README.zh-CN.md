@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）、[OpenCode](https://github.com/anomalyco/opencode)、[Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent)、SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) 与 [code-server](https://github.com/coder/code-server)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
+`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）、[OpenCode](https://github.com/anomalyco/opencode)、[Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent)、[Grok Build](https://grok.com/build)、SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) 与 [code-server](https://github.com/coder/code-server)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
 
 ## 安全警告
 
@@ -48,7 +48,7 @@ PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
 | Rust | [rustc](https://github.com/rust-lang/rust)、[cargo](https://github.com/rust-lang/cargo)、[rustup](https://github.com/rust-lang/rustup) | 1.88.0，minimal profile |
 | Java | [OpenJDK](https://github.com/openjdk/jdk) headless | 21 |
 | GitHub | [GitHub CLI](https://github.com/cli/cli)（`gh`） | 2.97.0 |
-| AI 工具 | [Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[OpenCode](https://github.com/anomalyco/opencode) | 2.1.221、0.146.0、1.18.18 |
+| AI 工具 | [Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[OpenCode](https://github.com/anomalyco/opencode)、[Grok Build](https://grok.com/build) | 2.1.221、0.146.0、1.18.18、1.0.5 |
 | AI 编排 | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)、[Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent) | 4.15.7、0.20.3、4.19.4 |
 | Claude 提供方工具 | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3（Linux musl CLI） |
 | 浏览器 IDE | [code-server](https://github.com/coder/code-server) | 4.132.0（常驻监听 8080；必须设置 `CODE_SERVER_PASSWORD`） |
@@ -217,6 +217,9 @@ scripts/exec bash -lc 'cd /workspace/my-project && omx setup --scope project --m
 # OpenCode / Oh My OpenAgent：在 TUI 中登录；启动不会代你登录
 scripts/exec opencode
 scripts/exec oh-my-openagent doctor
+
+# Grok Build：启动后在 TUI 中登录；启动不会代你执行 grok login
+scripts/exec grok
 
 # SaladDay/cc-switch-cli：运行 TUI 或检查配置
 scripts/exec cc-switch

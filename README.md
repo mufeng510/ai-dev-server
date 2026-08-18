@@ -1,6 +1,6 @@
 # ai-dev
 
-`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx), [GitHub CLI](https://github.com/cli/cli), common language toolchains, [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) (OMX), [OpenCode](https://github.com/anomalyco/opencode), [Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent), and SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli). Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
+`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx), [GitHub CLI](https://github.com/cli/cli), common language toolchains, [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) (OMX), [OpenCode](https://github.com/anomalyco/opencode), [Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent), [Grok Build](https://grok.com/build), and SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli). Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
 
 [简体中文](README.zh-CN.md)
 
@@ -53,7 +53,7 @@ The image is built from a digest-pinned Ubuntu 24.04 base, supports amd64 and ar
 | Rust | [rustc](https://github.com/rust-lang/rust), [cargo](https://github.com/rust-lang/cargo), [rustup](https://github.com/rust-lang/rustup) | 1.88.0, minimal profile |
 | Java | [OpenJDK](https://github.com/openjdk/jdk) headless | 21 |
 | GitHub | [GitHub CLI](https://github.com/cli/cli) (`gh`) | 2.97.0 |
-| AI tools | [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [OpenCode](https://github.com/anomalyco/opencode) | 2.1.221, 0.146.0, 1.18.18 |
+| AI tools | [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [OpenCode](https://github.com/anomalyco/opencode), [Grok Build](https://grok.com/build) | 2.1.221, 0.146.0, 1.18.18, 1.0.5 |
 | AI orchestration | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex), [Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent) | 4.15.7, 0.20.3, 4.19.4 |
 | Claude provider tool | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3 Linux musl CLI |
 | Browser IDE | [code-server](https://github.com/coder/code-server) | 4.132.0 (always-on at port 8080; requires `CODE_SERVER_PASSWORD`) |
@@ -299,6 +299,16 @@ scripts/exec oh-my-openagent doctor
 ```
 
 OpenCode user config persists through `OPENCODE_CONFIG_DIR` (`<generation>/opencode`, also routed from `~/.config/opencode`). Auth/data may also persist under `<generation>/opencode-data` (`~/.local/share/opencode`). Oh My OpenAgent Ultimate is registered as a local OpenCode plugin on first boot. Telemetry is disabled. Provider login and model mapping stay manual after start. Codex Light edition is not installed.
+
+### Grok Build
+
+The pinned `grok` CLI is in the image. Authenticate after start; startup never runs `grok login`:
+
+```bash
+scripts/exec grok
+```
+
+Grok credentials persist under `<generation>/grok` (`~/.grok`, including `auth.json`). Treat that directory as secret. Runtime self-update is disabled.
 
 ### cc-switch-cli
 

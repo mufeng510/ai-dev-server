@@ -88,6 +88,7 @@ These are absolute for this repository. Do not “temporarily” violate them in
       omo/                   # managed ~/.omo
       opencode-data/         # managed ~/.local/share/opencode
       opencode-omo-initialized
+      grok/                  # managed ~/.grok (auth.json is secret)
 ```
 
 Generation ids must remain safe (`ai_dev_safe_generation_id`). Validation must require every **required** tool root directory to exist as a real directory (not a symlink) under the generation.
@@ -242,6 +243,7 @@ Status meanings:
 | OpenCode | user-scope | `<generation>/opencode` | `OPENCODE_CONFIG_DIR` + route `.config/opencode` | complete | Manual TUI login; `scripts/exec opencode` |
 | Oh My OpenAgent (Ultimate) | user-scope | `<generation>/omo` | route `.omo`; plugin local path in `opencode.json` | complete | First-boot offline plugin registration; `oh-my-openagent doctor`; not Codex Light |
 | OpenCode XDG data | user-scope | `<generation>/opencode-data` | route `.local/share/opencode` | complete | Defensive auth/data home |
+| Grok Build | user-scope | `<generation>/grok` | route `.grok` | complete | Manual `scripts/exec grok`; treat auth.json as secret; no boot login |
 | GitHub CLI (`gh`) | user-scope | `<generation>/gh` | `GH_CONFIG_DIR` + route `.config/gh` | complete | Recreate-safe via generation-backed `GH_CONFIG_DIR` |
 | Git | user-scope | `<generation>/git` | `GIT_CONFIG_GLOBAL` + route `.config/git` | complete | |
 | SSH client keys | user-scope | `<generation>/ssh` | route `.ssh` | complete | |
