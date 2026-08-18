@@ -136,27 +136,10 @@ ai_dev_register_opencode_omo() {
   [ -d "${generation}/opencode" ] && [ ! -L "${generation}/opencode" ] || return 1
   [ -d "${generation}/omo" ] && [ ! -L "${generation}/omo" ] || return 1
   [ -d "${plugin_path}" ] && [ ! -L "${plugin_path}" ] || return 1
-  node -e '
-    const fs = require("fs");
-    const [configPath, pluginPath] = process.argv.slice(1);
-    let cfg = {};
-    if (fs.existsSync(configPath)) {
-      const raw = fs.readFileSync(configPath, "utf8");
-      if (raw.trim()) cfg = JSON.parse(raw);
-    }
-    if (!Array.isArray(cfg.plugin)) cfg.plugin = [];
-    const hasPlugin = cfg.plugin.some((entry) => {
-      const value = typeof entry === "string" ? entry : String(entry ?? "");
-      return value === pluginPath || value === "oh-my-openagent" || value === "oh-my-opencode" || value.startsWith("oh-my-openagent@") || value.startsWith("oh-my-opencode@");
-    });
-    if (!hasPlugin) cfg.plugin.push(pluginPath);
-    cfg.autoupdate = false;
-    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2) + "
-");
-  ' "${config_json}" "${plugin_path}" || return 1
+  OPENCODE_JSON="${config_json}" OPENCODE_PLUGIN="${plugin_path}" node -e 'const fs=require("fs"); const configPath=process.env.OPENCODE_JSON; const pluginPath=process.env.OPENCODE_PLUGIN; let cfg={}; if (fs.existsSync(configPath)) { const raw=fs.readFileSync(configPath,"utf8"); if (raw.trim()) cfg=JSON.parse(raw); } if (!Array.isArray(cfg.plugin)) cfg.plugin=[]; const hasPlugin=cfg.plugin.some((entry)=>{ const value=typeof entry==="string"?entry:String(entry??""); return value===pluginPath||value==="oh-my-openagent"||value==="oh-my-opencode"||value.startsWith("oh-my-openagent@")||value.startsWith("oh-my-opencode@"); }); if (!hasPlugin) cfg.plugin.push(pluginPath); cfg.autoupdate=false; fs.writeFileSync(configPath, JSON.stringify(cfg,null,2)+String.fromCharCode(10));' \
+    || return 1
   if [ ! -e "${omo_json}" ]; then
-    printf '%s
-' '{ "telemetry": false }' > "${omo_json}"
+    printf '%s\n' '{ "telemetry": false }' > "${omo_json}"
   fi
   grep -F "${plugin_path}" "${config_json}" >/dev/null || return 1
 }
