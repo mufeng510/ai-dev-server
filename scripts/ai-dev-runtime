@@ -79,7 +79,7 @@ ai_dev_validate_generation() {
   resolved_generation="$(readlink -f "${generation_dir}")" || return 1
   case "${resolved_generation}/" in "${generation_root}/"*) ;; *) return 1 ;; esac
   [ -f "${generation_dir}/schema-version" ] && [ ! -L "${generation_dir}/schema-version" ] || return 1
-  for required in claude codex omc cc-switch git ssh zsh gh code-server; do
+  for required in claude codex omc cc-switch git ssh zsh gh code-server opencode omo opencode-data; do
     [ -d "${generation_dir}/${required}" ] && [ ! -L "${generation_dir}/${required}" ] || return 1
   done
 }
@@ -94,7 +94,8 @@ ai_dev_probe_generation_tools() {
     OMC_STATE_DIR="${generation}/omc" CC_SWITCH_CONFIG_DIR="${generation}/cc-switch" \
     GH_CONFIG_DIR="${generation}/gh" \
     GIT_CONFIG_GLOBAL="${generation}/git/config" ZDOTDIR="${generation}/zsh" \
-    bash -lc 'claude --version >/dev/null && codex --version >/dev/null && omc --version >/dev/null && omx --version >/dev/null && cc-switch config validate >/dev/null && gh --version >/dev/null && git --version >/dev/null && ssh -V >/dev/null 2>&1 && zsh --version >/dev/null && code-server --version >/dev/null'
+    OPENCODE_CONFIG_DIR="${generation}/opencode" OMO_DISABLE_POSTHOG=1 OMO_SEND_ANONYMOUS_TELEMETRY=0 \
+    bash -lc 'claude --version >/dev/null && codex --version >/dev/null && omc --version >/dev/null && omx --version >/dev/null && opencode --version >/dev/null && oh-my-openagent version >/dev/null && cc-switch config validate >/dev/null && gh --version >/dev/null && git --version >/dev/null && ssh -V >/dev/null 2>&1 && zsh --version >/dev/null && code-server --version >/dev/null'
 }
 
 ai_dev_secure_state() {
@@ -122,6 +123,42 @@ ai_dev_export_generation() {
   export ZDOTDIR="${AI_DEV_GENERATION}/zsh"
   export CODE_SERVER_USER_DATA_DIR="${AI_DEV_GENERATION}/code-server"
   export CODE_SERVER_EXTENSIONS_DIR="/data/cache/code-server"
+  export OPENCODE_CONFIG_DIR="${AI_DEV_GENERATION}/opencode"
+  export OMO_DISABLE_POSTHOG=1
+  export OMO_SEND_ANONYMOUS_TELEMETRY=0
+}
+
+ai_dev_register_opencode_omo() {
+  local generation="$1" plugin_path config_json omo_json
+  plugin_path="/usr/local/lib/node_modules/oh-my-openagent"
+  config_json="${generation}/opencode/opencode.json"
+  omo_json="${generation}/omo/omo.jsonc"
+  [ -d "${generation}/opencode" ] && [ ! -L "${generation}/opencode" ] || return 1
+  [ -d "${generation}/omo" ] && [ ! -L "${generation}/omo" ] || return 1
+  [ -d "${plugin_path}" ] && [ ! -L "${plugin_path}" ] || return 1
+  node -e '
+    const fs = require("fs");
+    const [configPath, pluginPath] = process.argv.slice(1);
+    let cfg = {};
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, "utf8");
+      if (raw.trim()) cfg = JSON.parse(raw);
+    }
+    if (!Array.isArray(cfg.plugin)) cfg.plugin = [];
+    const hasPlugin = cfg.plugin.some((entry) => {
+      const value = typeof entry === "string" ? entry : String(entry ?? "");
+      return value === pluginPath || value === "oh-my-openagent" || value === "oh-my-opencode" || value.startsWith("oh-my-openagent@") || value.startsWith("oh-my-opencode@");
+    });
+    if (!hasPlugin) cfg.plugin.push(pluginPath);
+    cfg.autoupdate = false;
+    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2) + "
+");
+  ' "${config_json}" "${plugin_path}" || return 1
+  if [ ! -e "${omo_json}" ]; then
+    printf '%s
+' '{ "telemetry": false }' > "${omo_json}"
+  fi
+  grep -F "${plugin_path}" "${config_json}" >/dev/null || return 1
 }
 
 ai_dev_sync_path() {

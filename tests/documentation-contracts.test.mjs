@@ -58,6 +58,8 @@ test("operator documentation covers the required Milestone 7 surface", () => {
     "codex login --device-auth",
     "oh-my-claudecode@omc",
     "omx doctor",
+    "oh-my-openagent doctor",
+    "scripts/exec opencode",
     "cc-switch config path",
     "code-server",
     "CODE_SERVER_PASSWORD",

@@ -6,3 +6,6 @@
 .config/zsh	zsh
 .tmux.conf	tmux.conf
 .zshrc	zsh/.zshrc
+.config/opencode	opencode
+.omo	omo
+.local/share/opencode	opencode-data

@@ -84,6 +84,10 @@ These are absolute for this repository. Do not “temporarily” violate them in
       omx-initialized        # recorded OMX package version after first user setup
       gh/                    # GH_CONFIG_DIR
       code-server/           # code-server --user-data-dir
+      opencode/              # OPENCODE_CONFIG_DIR and managed ~/.config/opencode
+      omo/                   # managed ~/.omo
+      opencode-data/         # managed ~/.local/share/opencode
+      opencode-omo-initialized
 ```
 
 Generation ids must remain safe (`ai_dev_safe_generation_id`). Validation must require every **required** tool root directory to exist as a real directory (not a symlink) under the generation.
@@ -126,6 +130,9 @@ Rules:
 | `ZDOTDIR` | `<generation>/zsh` |
 | `CODE_SERVER_USER_DATA_DIR` | `<generation>/code-server` |
 | `CODE_SERVER_EXTENSIONS_DIR` | `/data/cache/code-server` |
+| `OPENCODE_CONFIG_DIR` | `<generation>/opencode` |
+| `OMO_DISABLE_POSTHOG` | `1` |
+| `OMO_SEND_ANONYMOUS_TELEMETRY` | `0` |
 
 When a new durable tool root is added, extend **both** `ai_dev_export_generation` and `ai_dev_probe_generation_tools` (or the current probe helper) in the same change.
 
@@ -232,6 +239,9 @@ Status meanings:
 | Oh My ClaudeCode (user/state) | user-scope | `<generation>/omc` | `OMC_STATE_DIR` + route `.config/claude-omc` | complete | |
 | Oh My ClaudeCode (project plugin) | repo-local | under `/workspace/<project>` | n/a | complete | Interactive plugin install per project |
 | cc-switch-cli | user-scope | `<generation>/cc-switch` | `CC_SWITCH_CONFIG_DIR` | complete | Reference strict path validation |
+| OpenCode | user-scope | `<generation>/opencode` | `OPENCODE_CONFIG_DIR` + route `.config/opencode` | complete | Manual TUI login; `scripts/exec opencode` |
+| Oh My OpenAgent (Ultimate) | user-scope | `<generation>/omo` | route `.omo`; plugin local path in `opencode.json` | complete | First-boot offline plugin registration; `oh-my-openagent doctor`; not Codex Light |
+| OpenCode XDG data | user-scope | `<generation>/opencode-data` | route `.local/share/opencode` | complete | Defensive auth/data home |
 | GitHub CLI (`gh`) | user-scope | `<generation>/gh` | `GH_CONFIG_DIR` + route `.config/gh` | complete | Recreate-safe via generation-backed `GH_CONFIG_DIR` |
 | Git | user-scope | `<generation>/git` | `GIT_CONFIG_GLOBAL` + route `.config/git` | complete | |
 | SSH client keys | user-scope | `<generation>/ssh` | route `.ssh` | complete | |

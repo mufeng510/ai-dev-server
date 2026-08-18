@@ -5,7 +5,7 @@ if [ "${AI_DEV_RESOLVED:-0}" != 1 ]; then
   exec env AI_DEV_RESOLVED=1 ai-dev-run ai-dev-doctor
 fi
 printf 'generation=%s\n' "${AI_DEV_GENERATION_ID}"
-for tool in claude codex omx omc cc-switch code-server; do
+for tool in claude codex omx omc cc-switch code-server opencode; do
   command -v "${tool}" >/dev/null 2>&1 || { printf '%s: unavailable\n' "${tool}" >&2; exit 1; }
   tool_version="$("${tool}" --version)" || { printf '%s: version check failed\n' "${tool}" >&2; exit 1; }
   printf '%s\n' "${tool_version%%$'\n'*}"
@@ -27,3 +27,10 @@ case "${GH_CONFIG_DIR}/" in
   *) echo 'gh: GH_CONFIG_DIR is outside active generation' >&2; exit 1 ;;
 esac
 omx doctor
+oh-my-openagent version >/dev/null || { echo 'oh-my-openagent: version check failed' >&2; exit 1; }
+if [ -f "${OPENCODE_CONFIG_DIR}/opencode.json" ] && grep -E 'oh-my-openagent|/usr/local/lib/node_modules/oh-my-openagent' "${OPENCODE_CONFIG_DIR}/opencode.json" >/dev/null; then
+  echo 'opencode-plugin=registered'
+else
+  echo 'opencode-plugin=missing' >&2
+  exit 1
+fi

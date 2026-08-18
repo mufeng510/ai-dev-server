@@ -1,6 +1,6 @@
 ---
 title: AI 编程工具
-description: 预装的 Claude Code、Codex CLI、OMC、OMX 与 cc-switch-cli。
+description: 预装的 Claude Code、Codex CLI、OpenCode、OMC、OMX、Oh My OpenAgent 与 cc-switch-cli。
 order: 5
 ---
 
@@ -34,6 +34,15 @@ scripts/exec codex login status
 ```bash
 scripts/exec omx doctor
 ```
+
+## OpenCode
+
+```bash
+scripts/exec opencode
+scripts/exec oh-my-openagent doctor
+```
+
+在 OpenCode TUI 中登录。用户配置通过 `OPENCODE_CONFIG_DIR` 持久化。首次启动会离线注册 Ultimate oh-my-openagent 插件并关闭遥测。未安装 Codex Light。
 
 ## cc-switch-cli
 

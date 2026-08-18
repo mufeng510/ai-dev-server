@@ -20,6 +20,10 @@ export const REQUIRED_VERSION_KEYS = Object.freeze([
   "GH_ARM64_SHA256",
   "OMC_VERSION",
   "OMX_VERSION",
+  "OPENCODE_VERSION",
+  "OPENCODE_AMD64_SHA256",
+  "OPENCODE_ARM64_SHA256",
+  "OMO_VERSION",
   "CC_SWITCH_VERSION",
   "YQ_VERSION",
   "CC_SWITCH_AMD64_ASSET",
@@ -77,7 +81,7 @@ export function validateVersionManifest(values) {
     }
     if (!/^[a-f0-9]{64}$/.test(checksum)) errors.push(`CODE_SERVER_${architecture}_SHA256 must be sha256`);
   }
-  for (const key of ["CLAUDE_AMD64_SHA256", "CLAUDE_ARM64_SHA256", "CODEX_INSTALLER_SHA256", "GH_AMD64_SHA256", "GH_ARM64_SHA256", "CODE_SERVER_AMD64_SHA256", "CODE_SERVER_ARM64_SHA256"]) {
+  for (const key of ["CLAUDE_AMD64_SHA256", "CLAUDE_ARM64_SHA256", "CODEX_INSTALLER_SHA256", "GH_AMD64_SHA256", "GH_ARM64_SHA256", "CODE_SERVER_AMD64_SHA256", "CODE_SERVER_ARM64_SHA256", "OPENCODE_AMD64_SHA256", "OPENCODE_ARM64_SHA256"]) {
     if (!/^[a-f0-9]{64}$/.test(values[key] ?? "")) errors.push(`${key} must be sha256`);
   }
   return errors;

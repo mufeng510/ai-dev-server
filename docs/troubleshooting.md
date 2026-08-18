@@ -27,13 +27,17 @@ The first start records `PUID` and `PGID`. Starting later with different values 
 
 The installed OMX version differs from the version recorded when the active generation was initialized. Startup preserves existing config and health fails closed. Back up the volumes and consult the release-specific migration notes. The generic migration helper only clones and switches a complete generation; it does not invent a tool-specific transformation.
 
+## `opencode-omo-migration-required`
+
+The installed oh-my-openagent version differs from the version recorded when the OpenCode plugin was registered. Startup preserves existing OpenCode/OMO config and does not rewrite `opencode.json`. Use `scripts/exec oh-my-openagent doctor` after a reviewed image upgrade.
+
 ## Incomplete Migration Or Rollback
 
 Normal startup rejects leftover migration, rollback, or identity journals. Keep the service stopped. Inspect `/config/migration.journal`, `/config/rollback.journal`, or `/config/identity-migration.journal` through a root recovery container and review `/logs/events.jsonl`. Do not delete a journal or edit `/config/active-generation` casually; retry the corresponding offline helper or restore a complete backup.
 
 ## Managed Route Is Unsafe
 
-Startup only replaces registered links it owns. A regular file, an external symlink, or a link to an unregistered generation at a managed path causes a closed failure. Move the conflicting path aside from a root recovery session, verify its contents, then restart. Managed routes are `.ssh`, `.config/git`, `.config/zsh`, `.config/claude-omc`, and `.config/gh` under `/home/dev`.
+Startup only replaces registered links it owns. A regular file, an external symlink, or a link to an unregistered generation at a managed path causes a closed failure. Move the conflicting path aside from a root recovery session, verify its contents, then restart. Managed routes are `.ssh`, `.config/git`, `.config/zsh`, `.config/claude-omc`, `.config/gh`, `.config/opencode`, `.omo`, and `.local/share/opencode` under `/home/dev`.
 
 ## Login Does Not Open A Browser
 

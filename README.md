@@ -1,6 +1,6 @@
 # ai-dev
 
-`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx), [GitHub CLI](https://github.com/cli/cli), common language toolchains, [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) (OMX), and SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli). Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
+`ai-dev` is an immutable Ubuntu 24.04 terminal development environment for amd64 and arm64. It includes [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx), [GitHub CLI](https://github.com/cli/cli), common language toolchains, [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode) (OMC), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) (OMX), [OpenCode](https://github.com/anomalyco/opencode), [Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent), and SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli). Projects, credentials, tool state, logs, models, and backups live in named volumes rather than the image.
 
 [简体中文](README.zh-CN.md)
 
@@ -53,14 +53,14 @@ The image is built from a digest-pinned Ubuntu 24.04 base, supports amd64 and ar
 | Rust | [rustc](https://github.com/rust-lang/rust), [cargo](https://github.com/rust-lang/cargo), [rustup](https://github.com/rust-lang/rustup) | 1.88.0, minimal profile |
 | Java | [OpenJDK](https://github.com/openjdk/jdk) headless | 21 |
 | GitHub | [GitHub CLI](https://github.com/cli/cli) (`gh`) | 2.97.0 |
-| AI tools | [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex) | 2.1.221, 0.146.0 |
-| AI orchestration | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) | 4.15.7, 0.20.3 |
+| AI tools | [Claude Code](https://www.anthropic.com/claude-code), [Codex CLI](https://github.com/openai/codex), [OpenCode](https://github.com/anomalyco/opencode) | 2.1.221, 0.146.0, 1.18.18 |
+| AI orchestration | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode), [Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex), [Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent) | 4.15.7, 0.20.3, 4.19.4 |
 | Claude provider tool | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3 Linux musl CLI |
 | Browser IDE | [code-server](https://github.com/coder/code-server) | 4.132.0 (always-on at port 8080; requires `CODE_SERVER_PASSWORD`) |
 | Development tools | [Git](https://github.com/git/git), [Git LFS](https://github.com/git-lfs/git-lfs), [OpenSSH client](https://github.com/openssh/openssh-portable), [tmux](https://github.com/tmux/tmux), [Zsh](https://github.com/zsh-users/zsh), [Bash](https://github.com/bminor/bash), [GCC](https://github.com/gcc-mirror/gcc), [Clang](https://github.com/llvm/llvm-project), [CMake](https://github.com/Kitware/CMake), [make](https://github.com/mirror/make), [pkg-config](https://github.com/pkgconf/pkgconf) | Installed from Ubuntu repositories |
 | Command-line tools | [`curl`](https://github.com/curl/curl), [`wget`](https://www.gnu.org/software/wget/), [`jq`](https://github.com/jqlang/jq), [`yq`](https://github.com/mikefarah/yq) 4.47.1, [`rg`](https://github.com/BurntSushi/ripgrep), [`fd`](https://github.com/sharkdp/fd), [`fzf`](https://github.com/junegunn/fzf), [`sqlite3`](https://github.com/sqlite/sqlite), [ShellCheck](https://github.com/koalaman/shellcheck) | `fd` is a compatibility alias for `fdfind` |
 
-The AI CLI support baseline includes Node.js 24 (the OMC and OMX runtime), Python 3 plus a native build toolchain and SQLite (native Node module fallback), and Git, `rg`, `jq`, `tmux`, `curl`, and `tar` for the supported CLI workflows. Runtime self-updates are disabled. Caches live under `/data/cache`, while configuration, credentials, and projects are persisted through the named volumes below. Check a running image with `scripts/exec <command> --version`.
+The AI CLI support baseline includes Node.js 24 (the OMC, OMX, and oh-my-openagent runtime), Python 3 plus a native build toolchain and SQLite (native Node module fallback), and Git, `rg`, `jq`, `tmux`, `curl`, and `tar` for the supported CLI workflows. Runtime self-updates are disabled. Caches live under `/data/cache`, while configuration, credentials, and projects are persisted through the named volumes below. Check a running image with `scripts/exec <command> --version`.
 
 ## Persistent Volumes
 
@@ -68,7 +68,7 @@ Compose creates exactly six named volumes:
 
 | Volume | Container path | Contents |
 | --- | --- | --- |
-| `workspace` | `/workspace` | Git repositories and repository-local Claude, Codex, OMC, and OMX files |
+| `workspace` | `/workspace` | Git repositories and repository-local Claude, Codex, OpenCode, OMC, OMX, and oh-my-openagent files |
 | `config` | `/config` | Versioned tool configuration, credentials, SSH, Git, Zsh, journals, and events |
 | `data` | `/data` | Package caches and reusable tool data |
 | `logs` | `/logs` | Runtime events and optional tool logs |
@@ -287,6 +287,18 @@ scripts/exec bash -lc 'cd /workspace/my-project && omx setup --scope project --m
 ```
 
 Repository-local OMX runtime state stays in `/workspace/my-project/.omx`.
+
+
+### OpenCode
+
+The pinned OpenCode CLI is in the image. Authenticate from the TUI; startup never starts login:
+
+```bash
+scripts/exec opencode
+scripts/exec oh-my-openagent doctor
+```
+
+OpenCode user config persists through `OPENCODE_CONFIG_DIR` (`<generation>/opencode`, also routed from `~/.config/opencode`). Auth/data may also persist under `<generation>/opencode-data` (`~/.local/share/opencode`). Oh My OpenAgent Ultimate is registered as a local OpenCode plugin on first boot. Telemetry is disabled. Provider login and model mapping stay manual after start. Codex Light edition is not installed.
 
 ### cc-switch-cli
 

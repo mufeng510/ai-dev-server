@@ -51,7 +51,7 @@ for (const [label, html] of [["en", enHome], ["zh", zhHome]]) {
 }
 
 // agents
-for (const name of ["Claude Code", "Codex CLI", "cc-switch"]) {
+for (const name of ["Claude Code", "Codex CLI", "OpenCode", "Oh My OpenAgent", "cc-switch"]) {
   if (!allHtml.includes(name)) fail(`missing agent mention: ${name}`);
 }
 

@@ -3,6 +3,7 @@
 set -eu
 
 readonly CLAUDE_RELEASE_BASE_URL="https://github.com/anthropics/claude-code/releases/download"
+readonly OPENCODE_RELEASE_BASE_URL="https://github.com/anomalyco/opencode/releases/download"
 readonly CODEX_INSTALLER_URL="https://chatgpt.com/codex/install.sh"
 readonly CC_SWITCH_REPOSITORY="SaladDay/cc-switch-cli"
 
@@ -51,6 +52,23 @@ single_extracted_file() {
   printf '%s\n' "$found"
 }
 
+install_opencode() {
+  case "$TARGETARCH" in
+    amd64) opencode_asset=opencode-linux-x64.tar.gz; opencode_checksum=$OPENCODE_AMD64_SHA256 ;;
+    arm64) opencode_asset=opencode-linux-arm64.tar.gz; opencode_checksum=$OPENCODE_ARM64_SHA256 ;;
+    *) fail "unsupported TARGETARCH for OpenCode: $TARGETARCH" ;;
+  esac
+  archive="$work_dir/$opencode_asset"
+  extract_dir="$work_dir/opencode-extract"
+  fetch "$OPENCODE_RELEASE_BASE_URL/v$OPENCODE_VERSION/$opencode_asset" "$archive"
+  verify_sha256 "$archive" "$opencode_checksum"
+  mkdir -p "$extract_dir"
+  tar -xzf "$archive" -C "$extract_dir"
+  binary="$(single_extracted_file "$extract_dir" opencode)"
+  install -m 0755 "$binary" "$INSTALL_PREFIX/bin/opencode"
+  "$INSTALL_PREFIX/bin/opencode" --version | grep -F "$OPENCODE_VERSION" >/dev/null || fail "OpenCode version verification failed"
+}
+
 install_claude() {
   case "$TARGETARCH" in
     amd64) claude_asset=claude-linux-x64.tar.gz; claude_checksum=$CLAUDE_AMD64_SHA256 ;;
@@ -88,7 +106,8 @@ install_node_tools() {
   npm_config_update_notifier=false \
     npm install --global --prefix "$INSTALL_PREFIX" --omit=dev \
       "oh-my-claude-sisyphus@$OMC_VERSION" \
-      "oh-my-codex@$OMX_VERSION"
+      "oh-my-codex@$OMX_VERSION" \
+      "oh-my-openagent@$OMO_VERSION"
 
   node -e \
     'const [path, expected] = process.argv.slice(1); const actual = require(path).version; if (actual !== expected) { throw new Error(`expected ${expected}, installed ${actual}`); }' \
@@ -96,6 +115,9 @@ install_node_tools() {
   node -e \
     'const [path, expected] = process.argv.slice(1); const actual = require(path).version; if (actual !== expected) { throw new Error(`expected ${expected}, installed ${actual}`); }' \
     "$INSTALL_PREFIX/lib/node_modules/oh-my-codex/package.json" "$OMX_VERSION"
+  node -e \
+    'const [path, expected] = process.argv.slice(1); const actual = require(path).version; if (actual !== expected) { throw new Error(`expected ${expected}, installed ${actual}`); }' \
+    "$INSTALL_PREFIX/lib/node_modules/oh-my-openagent/package.json" "$OMO_VERSION"
 }
 
 install_cc_switch() {
@@ -125,6 +147,10 @@ for variable in \
   CODEX_INSTALLER_SHA256 \
   OMC_VERSION \
   OMX_VERSION \
+  OPENCODE_VERSION \
+  OPENCODE_AMD64_SHA256 \
+  OPENCODE_ARM64_SHA256 \
+  OMO_VERSION \
   CC_SWITCH_VERSION \
   CC_SWITCH_AMD64_ASSET \
   CC_SWITCH_AMD64_SHA256 \
@@ -163,5 +189,6 @@ mkdir -p "$INSTALL_PREFIX/bin"
 
 install_claude
 install_codex
+install_opencode
 install_node_tools
 install_cc_switch

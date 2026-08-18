@@ -8,7 +8,7 @@ Images that include always-on code-server **will not start** unless `CODE_SERVER
 
 Tools do not update themselves at runtime. Upgrade by selecting a reviewed image tag or digest. Treat moving tags such as `latest` and `edge` as mutable; pin `X.Y.Z`, `vX.Y.Z`, or an image digest when reproducibility matters.
 
-An image update does not silently rewrite existing configuration. A packaged OMX version change may make health report `omx-migration-required`. The generic configuration helper clones and switches a complete generation; it does not run arbitrary release-specific tool transformations. Follow release-specific migration notes when a release requires them.
+An image update does not silently rewrite existing configuration. A packaged OMX version change may make health report `omx-migration-required`. A packaged oh-my-openagent version change may make health report `opencode-omo-migration-required` without rewriting OpenCode config. The generic configuration helper clones and switches a complete generation; it does not run arbitrary release-specific tool transformations. Follow release-specific migration notes when a release requires them.
 
 ## Backup All Volumes
 

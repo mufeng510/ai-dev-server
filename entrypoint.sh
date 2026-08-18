@@ -134,7 +134,7 @@ if [ ! -e "${AI_DEV_POINTER}" ]; then
   generation_id=g000001
   generation="${AI_DEV_GENERATIONS}/${generation_id}"
   install -d -o dev -g dev -m 0700 "${generation}"
-  for directory in claude omc cc-switch git ssh zsh gh code-server; do install -d -o dev -g dev -m 0700 "${generation}/${directory}"; done
+  for directory in claude omc cc-switch git ssh zsh gh code-server opencode omo opencode-data; do install -d -o dev -g dev -m 0700 "${generation}/${directory}"; done
   printf '%s\n' "${AI_DEV_CONFIG_SCHEMA:-1}" | ai_dev_atomic_write "${generation}/schema-version" 0600
   [ -e "${generation}/zsh/.zshrc" ] || install -m 0600 "${AI_DEV_DEFAULTS_DIR}/zshrc" "${generation}/zsh/.zshrc"
   [ -e "${generation}/tmux.conf" ] || install -m 0600 "${AI_DEV_DEFAULTS_DIR}/tmux.conf" "${generation}/tmux.conf"
@@ -176,8 +176,19 @@ chown root:root "${AI_DEV_POINTER}"
 # Non-destructive ensure for newly contracted roots so existing generations remain bootable.
 install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/gh"
 install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/code-server"
+install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/opencode"
+install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/omo"
+install -d -o dev -g dev -m 0700 "${AI_DEV_GENERATION}/opencode-data"
+installed_omo_version="$(node -p "require('/usr/local/lib/node_modules/oh-my-openagent/package.json').version")"
+[ -n "${installed_omo_version}" ] || fail 'oh-my-openagent did not report an installed version'
+if [ ! -e "${AI_DEV_GENERATION}/opencode-omo-initialized" ]; then
+  ai_dev_register_opencode_omo "${AI_DEV_GENERATION}" || fail 'OpenCode oh-my-openagent plugin registration failed'
+  chown "${PUID}:${PGID}" "${AI_DEV_GENERATION}/opencode/opencode.json" "${AI_DEV_GENERATION}/omo/omo.jsonc" 2>/dev/null || true
+  printf '%s\n' "${installed_omo_version}" | ai_dev_atomic_write "${AI_DEV_GENERATION}/opencode-omo-initialized" 0600
+  chown "${PUID}:${PGID}" "${AI_DEV_GENERATION}/opencode-omo-initialized"
+fi
 ai_dev_validate_generation "${AI_DEV_GENERATION_ID}" || fail 'active generation is incomplete or unsafe'
-chmod 0700 "${AI_DEV_GENERATION}/claude" "${AI_DEV_GENERATION}/codex" "${AI_DEV_GENERATION}/omc" "${AI_DEV_GENERATION}/ssh" "${AI_DEV_GENERATION}/gh"
+chmod 0700 "${AI_DEV_GENERATION}/claude" "${AI_DEV_GENERATION}/codex" "${AI_DEV_GENERATION}/omc" "${AI_DEV_GENERATION}/ssh" "${AI_DEV_GENERATION}/gh" "${AI_DEV_GENERATION}/opencode" "${AI_DEV_GENERATION}/omo" "${AI_DEV_GENERATION}/opencode-data"
 ai_dev_secure_state "${AI_DEV_GENERATION}/cc-switch" || fail 'cc-switch state has unsafe permissions'
 find "${AI_DEV_GENERATION}/ssh" -xdev -type f -exec chmod 0600 {} +
 [ ! -f "${AI_DEV_GENERATION}/codex/auth.json" ] || chmod 0600 "${AI_DEV_GENERATION}/codex/auth.json"
@@ -191,6 +202,15 @@ if [ -z "${recorded_omx_version}" ] || [ "${recorded_omx_version}" != "${install
   printf '%s\n' 'entrypoint: OMX migration is required; persisted user configuration was not changed' >&2
 else
   rm -f "${AI_DEV_CONFIG_ROOT}/omx-migration-required"
+fi
+
+recorded_omo_version="$(read_generation_state opencode-omo-initialized)"
+if [ -z "${recorded_omo_version}" ] || [ "${recorded_omo_version}" != "${installed_omo_version}" ]; then
+  printf 'expected=%s\nactual=%s\n' "${recorded_omo_version:-unrecorded}" "${installed_omo_version:-unavailable}" |
+    ai_dev_atomic_write "${AI_DEV_CONFIG_ROOT}/opencode-omo-migration-required" 0600
+  printf '%s\n' 'entrypoint: OpenCode/OMO migration is required; persisted user configuration was not changed' >&2
+else
+  rm -f "${AI_DEV_CONFIG_ROOT}/opencode-omo-migration-required"
 fi
 
 while IFS=$'\t' read -r home_path generation_path; do
@@ -234,7 +254,7 @@ fi
 
 git config --file "${AI_DEV_GENERATION}/git/config" user.name >/dev/null 2>&1 || printf '%s\n' 'entrypoint: Git identity is not configured (no identity was created)' >&2
 find "${AI_DEV_GENERATION}/ssh" -mindepth 1 -maxdepth 1 -type f -print -quit | grep -q . || printf '%s\n' 'entrypoint: no SSH keys are configured (no key was created)' >&2
-for tool in claude codex omx omc cc-switch; do
+for tool in claude codex omx omc cc-switch opencode oh-my-openagent; do
   command -v "${tool}" >/dev/null 2>&1 || fail "required tool is unavailable: ${tool}"
 done
 cc_switch_path="$(gosu dev:dev ai-dev-run cc-switch config path | sed -n 's/^Config dir:[[:space:]]*//p')" || fail 'cc-switch configuration path cannot be resolved'

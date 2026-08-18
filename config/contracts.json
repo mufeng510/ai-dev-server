@@ -56,6 +56,18 @@
     {
       "homePath": ".config/zsh",
       "generationPath": "zsh"
+    },
+    {
+      "homePath": ".config/opencode",
+      "generationPath": "opencode"
+    },
+    {
+      "homePath": ".omo",
+      "generationPath": "omo"
+    },
+    {
+      "homePath": ".local/share/opencode",
+      "generationPath": "opencode-data"
     }
   ],
   "stateMachines": {
@@ -66,6 +78,7 @@
       "copy-defaults",
       "report-auth-state",
       "setup-omx",
+      "setup-opencode-omo",
       "verify-omc",
       "verify-cc-switch",
       "ready"

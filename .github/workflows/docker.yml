@@ -97,7 +97,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
       - run: docker buildx bake test
-      - run: docker run --rm --entrypoint bash ai-dev:test -lc 'node --version && codex --version && claude --version && omc --version && omx --version && cc-switch --version'
+      - run: docker run --rm --entrypoint bash ai-dev:test -lc 'node --version && codex --version && claude --version && omc --version && omx --version && opencode --version && oh-my-openagent version && cc-switch --version'
       - run: bash scripts/ci-lifecycle-gate.sh ai-dev:test
 
   build-candidate:

@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）、SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) 与 [code-server](https://github.com/coder/code-server)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
+`ai-dev` 是一个面向 amd64 和 arm64 的不可变 Ubuntu 24.04 终端开发环境。镜像预装 [Docker CLI](https://github.com/docker/cli)/[Compose](https://github.com/docker/compose)/[Buildx](https://github.com/docker/buildx)、[GitHub CLI](https://github.com/cli/cli)、常用语言工具链、[Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)（OMC）、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)（OMX）、[OpenCode](https://github.com/anomalyco/opencode)、[Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent)、SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) 与 [code-server](https://github.com/coder/code-server)。项目、凭据、工具状态、日志、模型和备份均保存在命名卷中，不写入镜像。
 
 ## 安全警告
 
@@ -48,14 +48,14 @@ PUID="$(id -u)" PGID="$(id -g)" TZ=Asia/Shanghai docker compose up -d
 | Rust | [rustc](https://github.com/rust-lang/rust)、[cargo](https://github.com/rust-lang/cargo)、[rustup](https://github.com/rust-lang/rustup) | 1.88.0，minimal profile |
 | Java | [OpenJDK](https://github.com/openjdk/jdk) headless | 21 |
 | GitHub | [GitHub CLI](https://github.com/cli/cli)（`gh`） | 2.97.0 |
-| AI 工具 | [Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex) | 2.1.221、0.146.0 |
-| AI 编排 | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex) | 4.15.7、0.20.3 |
+| AI 工具 | [Claude Code](https://www.anthropic.com/claude-code)、[Codex CLI](https://github.com/openai/codex)、[OpenCode](https://github.com/anomalyco/opencode) | 2.1.221、0.146.0、1.18.18 |
+| AI 编排 | [Oh My ClaudeCode](https://github.com/Yeachan-Heo/oh-my-claudecode)、[Oh My Codex](https://github.com/Yeachan-Heo/oh-my-codex)、[Oh My OpenAgent](https://github.com/code-yeongyu/oh-my-openagent) | 4.15.7、0.20.3、4.19.4 |
 | Claude 提供方工具 | SaladDay [`cc-switch-cli`](https://github.com/SaladDay/cc-switch-cli) | 5.9.3（Linux musl CLI） |
 | 浏览器 IDE | [code-server](https://github.com/coder/code-server) | 4.132.0（常驻监听 8080；必须设置 `CODE_SERVER_PASSWORD`） |
 | 常用开发工具 | [Git](https://github.com/git/git)、[Git LFS](https://github.com/git-lfs/git-lfs)、[OpenSSH client](https://github.com/openssh/openssh-portable)、[tmux](https://github.com/tmux/tmux)、[Zsh](https://github.com/zsh-users/zsh)、[Bash](https://github.com/bminor/bash)、[GCC](https://github.com/gcc-mirror/gcc)、[Clang](https://github.com/llvm/llvm-project)、[CMake](https://github.com/Kitware/CMake)、[make](https://github.com/mirror/make)、[pkg-config](https://github.com/pkgconf/pkgconf) | 来自 Ubuntu 软件源 |
 | 常用命令行工具 | [`curl`](https://github.com/curl/curl)、[`wget`](https://www.gnu.org/software/wget/)、[`jq`](https://github.com/jqlang/jq)、[`yq`](https://github.com/mikefarah/yq) 4.47.1、[`rg`](https://github.com/BurntSushi/ripgrep)、[`fd`](https://github.com/sharkdp/fd)、[`fzf`](https://github.com/junegunn/fzf)、[`sqlite3`](https://github.com/sqlite/sqlite)、[ShellCheck](https://github.com/koalaman/shellcheck) | `fd` 是 `fdfind` 的兼容别名 |
 
-AI CLI 运行环境包括 Node.js 24（OMC 和 OMX 的运行时）、Python 3、原生编译工具链和 SQLite（原生 Node 模块的回退编译），以及受支持 CLI 工作流所需的 Git、`rg`、`jq`、`tmux`、`curl` 和 `tar`。镜像已禁用工具自更新；缓存存放在 `/data/cache`，配置、凭据和项目数据由下方的命名卷持久化。可在运行中的容器中使用 `scripts/exec <command> --version` 查看实际安装版本。
+AI CLI 运行环境包括 Node.js 24（OMC、OMX 与 oh-my-openagent 的运行时）、Python 3、原生编译工具链和 SQLite（原生 Node 模块的回退编译），以及受支持 CLI 工作流所需的 Git、`rg`、`jq`、`tmux`、`curl` 和 `tar`。镜像已禁用工具自更新；缓存存放在 `/data/cache`，配置、凭据和项目数据由下方的命名卷持久化。可在运行中的容器中使用 `scripts/exec <command> --version` 查看实际安装版本。
 
 ## 持久化卷
 
@@ -63,7 +63,7 @@ Compose 会创建六个命名卷。项目名为 `ai-dev`，卷通常命名为 `a
 
 | 卷 | 容器路径 | 内容 |
 | --- | --- | --- |
-| `workspace` | `/workspace` | Git 仓库及项目级 Claude、Codex、OMC、OMX 文件 |
+| `workspace` | `/workspace` | Git 仓库及项目级 Claude、Codex、OpenCode、OMC、OMX、oh-my-openagent 文件 |
 | `config` | `/config` | 工具配置、凭据、SSH、Git、Zsh、日志事件与迁移记录 |
 | `data` | `/data` | 软件包缓存和可复用工具数据 |
 | `logs` | `/logs` | 运行事件和可选工具日志 |
@@ -213,6 +213,10 @@ scripts/exec codex login status
 # OMX：检查运行环境；项目初始化在目标仓库中执行
 scripts/exec omx doctor
 scripts/exec bash -lc 'cd /workspace/my-project && omx setup --scope project --merge-agents'
+
+# OpenCode / Oh My OpenAgent：在 TUI 中登录；启动不会代你登录
+scripts/exec opencode
+scripts/exec oh-my-openagent doctor
 
 # SaladDay/cc-switch-cli：运行 TUI 或检查配置
 scripts/exec cc-switch

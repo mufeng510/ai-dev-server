@@ -19,6 +19,7 @@ Managed configuration is stored under `/config/generations/<generation-id>`. The
 - `OMC_STATE_DIR=<generation>/omc`
 - `CC_SWITCH_CONFIG_DIR=<generation>/cc-switch`
 - `GH_CONFIG_DIR=<generation>/gh`
+- `OPENCODE_CONFIG_DIR=<generation>/opencode`
 
 Managed links for SSH, Git, Zsh, OMC, and other contracted home paths point into the selected generation. Unsafe files or links at managed paths fail closed rather than being overwritten. Repository-local OMC and OMX state remains in `/workspace`. `/home/dev` is ephemeral except for managed routes.
 

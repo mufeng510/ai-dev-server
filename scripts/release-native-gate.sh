@@ -43,6 +43,7 @@ docker run --rm --entrypoint bash "$image_ref" -lc '
   assert_version cc-switch "$CC_SWITCH_VERSION"
   assert_version omc "$OMC_VERSION"
   assert_version omx "$OMX_VERSION"
+  assert_version opencode "$OPENCODE_VERSION"
   temp=$(mktemp -d)
   trap '\''rm -rf "$temp"'\'' EXIT
   export HOME="$temp/home" CC_SWITCH_CONFIG_DIR="$temp/cc-switch"
@@ -67,6 +68,9 @@ docker run --rm --entrypoint bash "$image_ref" -lc '
   printf "%s\n" "$doctor_output"
   grep -Eq "Results: [0-9]+ passed, [0-9]+ warnings, 0 failed" <<<"$doctor_output"
   find /usr/local/lib/node_modules/oh-my-codex -type f -perm /111 -print -quit | grep -q .
+  find /usr/local/lib/node_modules/oh-my-openagent -type f -perm /111 -print -quit | grep -q .
+  omo_ver=$(oh-my-openagent version | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+  test "$omo_ver" = "$OMO_VERSION"
   omc --help >/dev/null
   OMC_STATE_DIR="$temp/omc-state" HOME="$temp/home" omc config >/dev/null
   OMC_DB="$temp/omc-state.db" node -e "const modulePath=require.resolve(\"better-sqlite3\", {paths:[\"/usr/local/lib/node_modules/oh-my-claude-sisyphus\"]}); const Database=require(modulePath); const db=new Database(process.env.OMC_DB); db.exec(\"CREATE TABLE probe (value TEXT NOT NULL)\"); db.prepare(\"INSERT INTO probe VALUES (?)\").run(\"ready\"); if (db.prepare(\"SELECT value FROM probe\").get().value !== \"ready\") process.exit(1); db.close()"

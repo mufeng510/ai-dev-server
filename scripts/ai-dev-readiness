@@ -16,4 +16,5 @@ esac
 cc-switch config validate >/dev/null || { echo 'readiness: cc-switch-config-invalid' >&2; exit 1; }
 if claude auth status --json >/dev/null 2>&1; then echo 'readiness: claude-authenticated'; else echo 'readiness: claude-unauthenticated'; fi
 if codex login status >/dev/null 2>&1; then echo 'readiness: codex-authenticated'; else echo 'readiness: codex-unauthenticated'; fi
+opencode --version >/dev/null 2>&1 || { echo 'readiness: opencode-unavailable' >&2; exit 1; }
 printf '%s\n' 'readiness: ready'

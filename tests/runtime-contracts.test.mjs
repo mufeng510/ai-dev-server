@@ -87,9 +87,12 @@ test("generation resolver fails closed and exports every tool state root", () =>
     "CC_SWITCH_CONFIG_DIR=",
     "GH_CONFIG_DIR=",
     "CODE_SERVER_USER_DATA_DIR=",
-    "CODE_SERVER_EXTENSIONS_DIR="
+    "CODE_SERVER_EXTENSIONS_DIR=",
+    "OPENCODE_CONFIG_DIR=",
+    "OMO_DISABLE_POSTHOG=1",
+    "OMO_SEND_ANONYMOUS_TELEMETRY=0"
   ]);
-  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh code-server/);
+  assert.match(runtime, /for required in claude codex omc cc-switch git ssh zsh gh code-server opencode omo opencode-data/);
 });
 
 test("supported shell and exec paths always route through ai-dev-run", () => {
@@ -159,7 +162,7 @@ test("bootstrap does not automate identity, authentication, providers, proxy, sy
     /cc-switch\s+provider\s+(?:add|remove|set|update)/i,
     /cc-switch\s+proxy\s+(?:enable|start)/i,
     /cc-switch\s+sync/i,
-    /(?:claude|codex|omc|omx|cc-switch)\s+(?:self-)?update/i,
+    /(?:claude|codex|omc|omx|cc-switch|opencode|oh-my-openagent|oh-my-opencode|omo-agent-toolkit)\s+(?:self-)?update/i,
     /ssh-keygen/i,
     /git\s+config\s+(?:--global\s+)?user\.(?:name|email)/i
   ]) {
@@ -203,6 +206,11 @@ test("normal startup never recursively changes ownership and OMX setup is determ
   assert.match(entrypoint, /npm_config_offline=true/);
   assertOrdered(entrypoint, ["omx setup", "omx doctor", "mv \"${omx_staging}\"", "omx-initialized", "ai_dev_commit_pointer"]);
   assert.match(entrypoint, /omx-migration-required/);
+  assert.match(entrypoint, /ai_dev_register_opencode_omo/);
+  assert.match(entrypoint, /opencode-omo-initialized/);
+  assert.match(entrypoint, /opencode-omo-migration-required/);
+  assert.doesNotMatch(entrypoint, /--platform=codex/);
+  assert.doesNotMatch(entrypoint, /oh-my-openagent doctor/);
   assert.match(entrypoint, /recovery\.completed/);
   assert.match(entrypoint, /0 failed/);
 });
@@ -229,6 +237,15 @@ test("official native installers remain pinned and noninteractive", () => {
   assert.match(installer, /CODEX_RELEASE="\$CODEX_VERSION"/);
   assert.match(installer, /--release "\$CODEX_VERSION"/);
   assert.doesNotMatch(installer, /api\.github\.com\/repos\/openai\/codex/);
+  assert.match(installer, /https:\/\/github\.com\/anomalyco\/opencode\/releases\/download/);
+  assert.match(installer, /OPENCODE_RELEASE_BASE_URL/);
+  assert.match(installer, /opencode-linux-x64\.tar\.gz/);
+  assert.match(installer, /opencode-linux-arm64\.tar\.gz/);
+  assert.match(installer, /oh-my-openagent@\$OMO_VERSION/);
+  assert.doesNotMatch(installer, /opencode\.ai\/install/);
+  assert.doesNotMatch(installer, /omo-ai@beta/);
+  assert.doesNotMatch(installer, /lazycodex-ai/);
+  assert.doesNotMatch(installer, /--platform=codex/);
 });
 
 test("readiness and doctor validate active cc-switch state and report auth only", () => {
@@ -259,8 +276,8 @@ test("migration and rollback preserve a single atomic generation pointer commit"
   assert.match(rollback, /recovery\.started/);
   assert.match(rollback, /recovery\.completed/);
   assert.match(runtime, /ai_dev_probe_generation_tools/);
-  for (const tool of ["claude", "codex", "omc", "omx", "cc-switch", "gh", "git", "ssh", "zsh"]) {
-    assert.match(runtime, new RegExp(`${tool}.*--version|${tool} config validate`));
+  for (const tool of ["claude", "codex", "omc", "omx", "cc-switch", "opencode", "oh-my-openagent", "gh", "git", "ssh", "zsh"]) {
+    assert.match(runtime, new RegExp(`${tool}.*--version|${tool} version|${tool} config validate`));
   }
   assert.match(migration, /ai_dev_probe_generation_tools/);
   assert.match(rollback, /ai_dev_probe_generation_tools/);
@@ -347,14 +364,14 @@ test("generation resolution works against an isolated offline config root", { sk
       `AI_DEV_CONFIG_ROOT=${JSON.stringify(configRoot)}`,
       `. ${JSON.stringify(runtimePath)}`,
       "ai_dev_export_generation",
-      "printf '%s\\n' \"$CLAUDE_CONFIG_DIR\" \"$CODEX_HOME\" \"$OMC_STATE_DIR\" \"$CC_SWITCH_CONFIG_DIR\" \"$GH_CONFIG_DIR\""
+      "printf '%s\\n' \"$CLAUDE_CONFIG_DIR\" \"$CODEX_HOME\" \"$OMC_STATE_DIR\" \"$CC_SWITCH_CONFIG_DIR\" \"$GH_CONFIG_DIR\" \"$OPENCODE_CONFIG_DIR\""
     ].join("; ");
     const result = spawnSync("bash", ["-c", command], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     const portable = (value) => value.replaceAll("\\", "/");
     assert.deepEqual(
       result.stdout.trim().split("\n").map(portable),
-      ["claude", "codex", "omc", "cc-switch", "gh"].map((name) => portable(path.join(generation, name)))
+      ["claude", "codex", "omc", "cc-switch", "gh", "opencode"].map((name) => portable(path.join(generation, name)))
     );
 
     fs.rmSync(path.join(configRoot, "active-generation"));

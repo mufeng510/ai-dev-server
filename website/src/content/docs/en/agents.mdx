@@ -1,6 +1,6 @@
 ---
 title: AI coding tools
-description: Preinstalled Claude Code, Codex CLI, OMC, OMX, and cc-switch-cli workflows.
+description: Preinstalled Claude Code, Codex CLI, OpenCode, OMC, OMX, Oh My OpenAgent, and cc-switch-cli workflows.
 order: 5
 ---
 
@@ -37,6 +37,15 @@ scripts/exec bash -lc 'cd /workspace/my-project && omx setup --scope project --m
 ```
 
 Repository-local OMX runtime state stays in `/workspace/my-project/.omx`.
+
+## OpenCode
+
+```bash
+scripts/exec opencode
+scripts/exec oh-my-openagent doctor
+```
+
+Authenticate in the OpenCode TUI. User config persists through `OPENCODE_CONFIG_DIR`. First boot registers the Ultimate oh-my-openagent plugin offline and disables telemetry. Codex Light edition is not installed.
 
 ## cc-switch-cli
 
