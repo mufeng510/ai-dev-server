@@ -211,6 +211,11 @@ test("normal startup never recursively changes ownership and OMX setup is determ
   assert.match(entrypoint, /opencode-omo-migration-required/);
   assert.doesNotMatch(entrypoint, /--platform=codex/);
   assert.doesNotMatch(entrypoint, /oh-my-openagent doctor/);
+  const runtime = read("scripts/ai-dev-runtime");
+  assert.match(runtime, /ai_dev_register_opencode_omo/);
+  assert.match(runtime, /String\.fromCharCode\(10\)/);
+  assert.doesNotMatch(runtime, /JSON\.stringify\(cfg,\s*null,\s*2\)\s*\+\s*"\s*$/m);
+
   assert.match(entrypoint, /recovery\.completed/);
   assert.match(entrypoint, /0 failed/);
 });
